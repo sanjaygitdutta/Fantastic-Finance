@@ -34,7 +34,7 @@ Create/update `.env` file in project root:
 ```env
 VITE_UPSTOX_API_KEY=your_api_key_here
 VITE_UPSTOX_API_SECRET=your_api_secret_here
-VITE_UPSTOX_REDIRECT_URI=http://localhost:5173/auth/callback
+VITE_UPSTOX_REDIRECT_URI=http://localhost:3000/auth/callback
 ```
 
 ---

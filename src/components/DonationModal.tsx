@@ -11,7 +11,7 @@ export default function DonationModal({ isOpen, onClose }: DonationModalProps) {
     const [copiedUPI, setCopiedUPI] = useState(false);
 
     // Your UPI ID (can be configured in admin dashboard later)
-    const UPI_ID = "abcom@paytm"; // Replace with your actual UPI ID
+    const UPI_ID = "9531775665@ybl"; // Replace with your actual UPI ID
 
     const tiers = [
         {
