@@ -16,7 +16,18 @@ export default function Layout() {
     const [donationModalOpen, setDonationModalOpen] = useState(false);
 
     const handleSignOut = async () => {
+        // Clear demo user
+        localStorage.removeItem('demo_user');
+        window.dispatchEvent(new Event('demo_login'));
+
+        // Clear Upstox auth
+        localStorage.removeItem('upstox_access_token');
+
+        // Sign out from Supabase
         await supabase.auth.signOut();
+
+        // Force reload/redirect to home
+        window.location.href = '/';
     };
 
     const isActive = (path: string) => location.pathname === path;

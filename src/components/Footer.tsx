@@ -96,6 +96,9 @@ export default function Footer() {
                 </div>
 
                 <div className="border-t border-slate-800 pt-8 text-center">
+                    <p className="text-slate-500 text-sm mb-4 max-w-4xl mx-auto px-4">
+                        Disclaimer: Fantastic Financial is an independent website and has no relation to any company, LLP, or entity with similar names. It is not an advisory firm; it is an education and analytics provider.
+                    </p>
                     <p className="text-slate-500 text-sm">
                         © {new Date().getFullYear()} Fantastic Financial. All rights reserved.
                     </p>

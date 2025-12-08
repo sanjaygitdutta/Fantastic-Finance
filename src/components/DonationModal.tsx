@@ -202,7 +202,7 @@ export default function DonationModal({ isOpen, onClose }: DonationModalProps) {
                             Why Your Support Matters
                         </h4>
                         <p className="text-sm text-slate-600 dark:text-slate-400">
-                            Your donation helps us maintain servers, add new features, and keep Fantastic Financial
+                            Your donation helps us maintain servers, upgrade to expensive real-time data, add new features, and keep Fantastic Financial
                             completely free for all traders. Every contribution, no matter the size, makes a difference! 🙏
                         </p>
                     </div>

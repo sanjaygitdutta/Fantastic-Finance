@@ -24,9 +24,9 @@ export default function AdminDashboard() {
     const [loadingMessages, setLoadingMessages] = useState(false);
     const [stats, setStats] = useState({
         totalMessages: 0,
-        dailyActiveUsers: 142, // Placeholder
-        avgSessionDuration: '12m 30s', // Placeholder
-        totalUsers: 580 // Demo value
+        dailyActiveUsers: 0,
+        avgSessionDuration: '-',
+        totalUsers: 0
     });
     const [deviceUsageData, setDeviceUsageData] = useState([
         { name: 'Desktop', value: 0, color: '#3b82f6' },

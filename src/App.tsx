@@ -6,6 +6,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 import Layout from './components/Layout';
 import SEO from './components/SEO';
 import { useAnalytics } from './hooks/useAnalytics';
+import Footer from './components/Footer';
 
 // Lazy load landing page components for better performance
 const Hero = lazy(() => import('./components/Hero'));
@@ -221,6 +222,7 @@ function App() {
                   <FinalCTA onSignUpClick={() => handleAuthClick('signup')} />
                   <About />
                   <Contact />
+                  <Footer />
                   <AuthModal
                     isOpen={showAuthModal}
                     onClose={() => setShowAuthModal(false)}

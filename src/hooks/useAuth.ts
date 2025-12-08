@@ -83,6 +83,8 @@ export function useAuth() {
       const demoUserStr = localStorage.getItem('demo_user');
       if (demoUserStr) {
         setUser(JSON.parse(demoUserStr));
+      } else {
+        setUser(null);
       }
     };
     window.addEventListener('demo_login', handleDemoLogin);

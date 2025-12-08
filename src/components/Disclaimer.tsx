@@ -19,6 +19,10 @@ export default function Disclaimer() {
                 {/* Disclaimer Content */}
                 <div className="bg-white rounded-2xl shadow-lg p-8 mb-6">
                     <div className="prose prose-slate max-w-none">
+                        <p className="text-slate-700 leading-relaxed mb-4 font-medium border-l-4 border-blue-500 pl-4 bg-blue-50 p-2 rounded-r">
+                            <strong>Fantastic Financial is an independent website and has no relation to any company, LLP, or entity with similar names.</strong>
+                        </p>
+
                         <p className="text-slate-700 leading-relaxed mb-4">
                             The information provided on this website is for <strong>informational and educational purposes only</strong>.
                             Fantastic Finance is <strong>not a SEBI-registered investment advisor</strong> and does not provide any kind of

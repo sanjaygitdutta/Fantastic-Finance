@@ -1,5 +1,6 @@
 import { useEffect, useRef, memo } from 'react';
 import { Globe, TrendingUp, TrendingDown, Activity, BarChart3, Zap, DollarSign } from 'lucide-react';
+import GiftNiftySimulation from './GiftNiftySimulation';
 
 // Market Ticker Widget
 const MarketTicker = memo(function MarketTicker() {
@@ -500,8 +501,13 @@ export default memo(function MarketData() {
                         World Indices
                     </h2>
                 </div>
-                <div className="p-4">
-                    <WorldIndicesWidget />
+                <div className="p-4 grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div className="lg:col-span-2">
+                        <WorldIndicesWidget />
+                    </div>
+                    <div className="lg:col-span-1">
+                        <GiftNiftySimulation />
+                    </div>
                 </div>
             </div>
 
