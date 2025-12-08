@@ -88,7 +88,7 @@ export default function Contact() {
             <div>
               <h3 className="font-bold text-slate-900 mb-1">Location</h3>
               <p className="text-slate-600">
-                Mumbai, Maharashtra, India
+                Kolkata, West Bengal, India
               </p>
             </div>
           </div>

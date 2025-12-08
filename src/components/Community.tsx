@@ -54,6 +54,7 @@ export default function Community() {
   const [postType, setPostType] = useState<'text' | 'trade' | 'poll' | 'photo'>('text');
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [posting, setPosting] = useState(false);
   const [followedUsers, setFollowedUsers] = useState<number[]>([]);
 
 
@@ -119,11 +120,32 @@ export default function Community() {
   };
 
   const handleCreatePost = async () => {
-    if (!user) return;
+    if (!user) {
+      alert('Please login to create a post');
+      return;
+    }
+
+    // Validation
+    if (!newPostContent.trim() && postType === 'text') {
+      alert('Please write something before posting');
+      return;
+    }
+
+    if (postType === 'trade' && (!tradeInput.symbol || !tradeInput.entry)) {
+      alert('Please fill in Symbol and Entry Price for trade post');
+      return;
+    }
+
+    if (postType === 'poll' && (!pollInput.question || !pollInput.option1 || !pollInput.option2)) {
+      alert('Please fill in question and both options for poll');
+      return;
+    }
+
+    setPosting(true);
 
     const newPostData = {
       user_id: user.id,
-      content: newPostContent,
+      content: newPostContent || `Posted a ${postType}`,
       type: postType,
       image_url: photoPreview,
       trade_details: postType === 'trade' ? {
@@ -151,6 +173,9 @@ export default function Community() {
 
       if (error) throw error;
 
+      // Success feedback
+      alert('Post created successfully! 🎉');
+
       // Reset form and refresh
       setNewPostContent('');
       setTradeInput({ symbol: '', action: 'BUY', entry: '', target: '', stopLoss: '' });
@@ -158,8 +183,11 @@ export default function Community() {
       setPhotoPreview(null);
       setPostType('text');
       fetchPosts();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating post:', error);
+      alert(`Failed to create post: ${error.message || 'Database error. Please check if community_posts table exists.'}`);
+    } finally {
+      setPosting(false);
     }
   };
 
@@ -200,6 +228,109 @@ export default function Community() {
       }
     } catch (error) {
       console.error('Error liking post:', error);
+    }
+  };
+
+  // Comment State
+  const [activeCommentPostId, setActiveCommentPostId] = useState<string | null>(null);
+  const [commentContent, setCommentContent] = useState('');
+  const [comments, setComments] = useState<{ [postId: string]: any[] }>({});
+
+  const toggleComments = (postId: string) => {
+    if (activeCommentPostId === postId) {
+      setActiveCommentPostId(null);
+    } else {
+      setActiveCommentPostId(postId);
+      fetchComments(postId);
+    }
+  };
+
+  const fetchComments = async (postId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('community_comments')
+        .select(`
+          *,
+          profiles:user_id (email)
+        `)
+        .eq('post_id', postId)
+        .order('created_at', { ascending: true });
+
+      if (error) throw error;
+
+      const formattedComments = data?.map((comment: any) => ({
+        id: comment.id,
+        author: comment.profiles?.email?.split('@')[0] || 'Anonymous',
+        content: comment.content,
+        time: new Date(comment.created_at).toLocaleDateString(),
+        avatar_url: `https://ui-avatars.com/api/?name=${comment.profiles?.email || 'User'}&background=random`
+      })) || [];
+
+      setComments(prev => ({ ...prev, [postId]: formattedComments }));
+    } catch (error) {
+      console.error('Error fetching comments:', error);
+      // Fallback for demo/error
+      setComments(prev => ({ ...prev, [postId]: [] }));
+    }
+  };
+
+  const handlePostComment = async (postId: string) => {
+    if (!commentContent.trim() || !user) return;
+
+    try {
+      const newComment = {
+        post_id: postId,
+        user_id: user.id,
+        content: commentContent
+      };
+
+      const { data, error } = await supabase
+        .from('community_comments')
+        .insert(newComment)
+        .select();
+
+      if (error) throw error;
+
+      // Optimistic Update
+      const optimisticComment = {
+        id: Date.now().toString(),
+        author: user.email?.split('@')[0] || 'You',
+        content: commentContent,
+        time: 'Just now',
+        avatar_url: `https://ui-avatars.com/api/?name=${user.email || 'You'}&background=random`
+      };
+
+      setComments(prev => ({
+        ...prev,
+        [postId]: [...(prev[postId] || []), optimisticComment]
+      }));
+      setCommentContent('');
+
+      // Refresh real comments
+      if (data) fetchComments(postId);
+
+    } catch (error) {
+      console.error('Error posting comment:', error);
+      alert('Failed to post comment. Please try again.');
+    }
+  };
+
+  const handleShare = async (post: Post) => {
+    const shareData = {
+      title: `Check out ${post.author}'s post on Fantastic Financial`,
+      text: post.content,
+      url: window.location.href
+    };
+
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+      } catch (err) {
+        console.error('Error sharing:', err);
+      }
+    } else {
+      navigator.clipboard.writeText(`${shareData.title}\n${shareData.text}\n${shareData.url}`);
+      alert('Link copied to clipboard!');
     }
   };
 
@@ -359,10 +490,17 @@ export default function Community() {
                 </div>
                 <button
                   onClick={handleCreatePost}
-                  disabled={!newPostContent.trim() && postType === 'text'}
-                  className="bg-blue-600 text-white px-6 py-1 rounded-lg font-medium hover:bg-blue-700 transition disabled:opacity-50"
+                  disabled={posting || (!newPostContent.trim() && postType === 'text')}
+                  className="bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                 >
-                  Post
+                  {posting ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                      Posting...
+                    </>
+                  ) : (
+                    'Post'
+                  )}
                 </button>
               </div>
             </div>
@@ -471,7 +609,7 @@ export default function Community() {
                       )}
                     </div>
 
-                    {post.image_url && (
+                    {post.image_url && !post.type.includes('photo') && (
                       <div className="mt-2">
                         <img src={post.image_url} alt="Post content" className="w-full object-cover max-h-[500px]" />
                       </div>
@@ -486,7 +624,9 @@ export default function Community() {
                         <span>{post.likes}</span>
                       </div>
                       <div className="flex gap-3">
-                        <span>{post.comments} comments</span>
+                        <button onClick={() => toggleComments(post.id)} className="hover:underline">
+                          {comments[post.id]?.length || 0} comments
+                        </button>
                         <span>{post.shares} shares</span>
                       </div>
                     </div>
@@ -500,15 +640,64 @@ export default function Community() {
                         <ThumbsUp className={`w-5 h-5 ${post.isLiked ? 'fill-current' : ''}`} />
                         Like
                       </button>
-                      <button className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg hover:bg-[#F0F2F5] dark:hover:bg-[#3A3B3C] transition font-medium text-slate-600 dark:text-slate-300">
+                      <button
+                        onClick={() => toggleComments(post.id)}
+                        className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg hover:bg-[#F0F2F5] dark:hover:bg-[#3A3B3C] transition font-medium ${activeCommentPostId === post.id ? 'text-blue-600 bg-blue-50 dark:bg-blue-900/20' : 'text-slate-600 dark:text-slate-300'}`}
+                      >
                         <MessageSquare className="w-5 h-5" />
                         Comment
                       </button>
-                      <button className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg hover:bg-[#F0F2F5] dark:hover:bg-[#3A3B3C] transition font-medium text-slate-600 dark:text-slate-300">
+                      <button
+                        onClick={() => handleShare(post)}
+                        className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg hover:bg-[#F0F2F5] dark:hover:bg-[#3A3B3C] transition font-medium text-slate-600 dark:text-slate-300"
+                      >
                         <Share2 className="w-5 h-5" />
                         Share
                       </button>
                     </div>
+
+                    {/* Comment Section */}
+                    {activeCommentPostId === post.id && (
+                      <div className="px-4 pb-4 pt-2 bg-slate-50 dark:bg-[#1C1D1E] animate-in slide-in-from-top-2">
+                        {/* Write Comment */}
+                        <div className="flex gap-2 mb-4">
+                          <img src={`https://ui-avatars.com/api/?name=${user?.email || 'You'}`} alt="You" className="w-8 h-8 rounded-full" />
+                          <div className="flex-1 flex gap-2">
+                            <input
+                              type="text"
+                              placeholder="Write a comment..."
+                              className="flex-1 bg-white dark:bg-[#3A3B3C] border border-slate-200 dark:border-slate-700 rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              value={commentContent}
+                              onChange={(e) => setCommentContent(e.target.value)}
+                              onKeyDown={(e) => e.key === 'Enter' && handlePostComment(post.id)}
+                            />
+                            <button
+                              onClick={() => handlePostComment(post.id)}
+                              disabled={!commentContent.trim()}
+                              className="bg-blue-600 text-white p-2 rounded-full hover:bg-blue-700 transition disabled:opacity-50"
+                            >
+                              <Send className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Comment List */}
+                        <div className="space-y-3">
+                          {comments[post.id]?.map((comment: any) => (
+                            <div key={comment.id} className="flex gap-2">
+                              <img src={comment.avatar_url} alt={comment.author} className="w-8 h-8 rounded-full flex-shrink-0" />
+                              <div className="bg-white dark:bg-[#3A3B3C] p-2 rounded-2xl rounded-tl-none">
+                                <p className="font-semibold text-xs text-slate-900 dark:text-white">{comment.author}</p>
+                                <p className="text-sm text-slate-700 dark:text-slate-200">{comment.content}</p>
+                              </div>
+                            </div>
+                          ))}
+                          {comments[post.id]?.length === 0 && (
+                            <p className="text-center text-slate-500 text-xs py-2">No comments yet. Be the first!</p>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

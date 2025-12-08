@@ -1,6 +1,7 @@
 import { useEffect, useRef, memo } from 'react';
 import { Globe, TrendingUp, TrendingDown, Activity, BarChart3, Zap, DollarSign } from 'lucide-react';
 import GiftNiftySimulation from './GiftNiftySimulation';
+import { useLivePrices } from '../context/LivePriceContext';
 
 // Market Ticker Widget
 const MarketTicker = memo(function MarketTicker() {
@@ -460,6 +461,7 @@ const BondsWidget = memo(function BondsWidget() {
 });
 
 export default memo(function MarketData() {
+    const { usingLiveApi } = useLivePrices();
     return (
         <div className="space-y-6 pb-12">
             {/* Page Header */}
@@ -481,6 +483,18 @@ export default memo(function MarketData() {
                     </div>
                 </div>
             </div>
+
+            {!usingLiveApi && (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <Zap className="w-5 h-5 text-yellow-600" />
+                        <div>
+                            <p className="font-bold text-yellow-800">Simulation Mode Active</p>
+                            <p className="text-sm text-yellow-700">You are viewing simulated market data. Log in with Upstox for real-time live feeds.</p>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Market Ticker */}
             <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">

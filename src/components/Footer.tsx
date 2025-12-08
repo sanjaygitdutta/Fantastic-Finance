@@ -1,4 +1,4 @@
-import { TrendingUp, Twitter, Facebook, Linkedin, Instagram, Mail, Phone, MessageCircle, Star } from 'lucide-react';
+import { TrendingUp, Twitter, Facebook, Linkedin, Instagram, Mail, Phone, MessageCircle, Star, Youtube } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export default function Footer() {
@@ -18,16 +18,19 @@ export default function Footer() {
                             Empowering investors with professional-grade tools, real-time data, and community insights to make smarter financial decisions.
                         </p>
                         <div className="flex gap-4">
-                            <a href="#" className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center hover:bg-blue-600 hover:text-white transition">
+                            <a href="https://www.youtube.com/@fantasticfinancial" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center hover:bg-red-600 hover:text-white transition" title="YouTube">
+                                <Youtube className="w-5 h-5" />
+                            </a>
+                            <a href="#" className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center hover:bg-blue-400 hover:text-white transition">
                                 <Twitter className="w-5 h-5" />
                             </a>
                             <a href="#" className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center hover:bg-blue-600 hover:text-white transition">
                                 <Facebook className="w-5 h-5" />
                             </a>
-                            <a href="#" className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center hover:bg-blue-600 hover:text-white transition">
+                            <a href="#" className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center hover:bg-blue-700 hover:text-white transition">
                                 <Linkedin className="w-5 h-5" />
                             </a>
-                            <a href="#" className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center hover:bg-blue-600 hover:text-white transition">
+                            <a href="#" className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center hover:bg-pink-600 hover:text-white transition">
                                 <Instagram className="w-5 h-5" />
                             </a>
                         </div>
@@ -98,6 +101,9 @@ export default function Footer() {
                 <div className="border-t border-slate-800 pt-8 text-center">
                     <p className="text-slate-500 text-sm mb-4 max-w-4xl mx-auto px-4">
                         Disclaimer: Fantastic Financial is an independent website and has no relation to any company, LLP, or entity with similar names. It is not an advisory firm; it is an education and analytics provider.
+                    </p>
+                    <p className="text-slate-400 text-sm mb-2">
+                        Made with <span className="text-red-500">❤️</span> by a Trader From Kolkata
                     </p>
                     <p className="text-slate-500 text-sm">
                         © {new Date().getFullYear()} Fantastic Financial. All rights reserved.

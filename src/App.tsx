@@ -8,6 +8,8 @@ import SEO from './components/SEO';
 import { useAnalytics } from './hooks/useAnalytics';
 import Footer from './components/Footer';
 
+import { useAntiScraping } from './hooks/useAntiScraping';
+
 // Lazy load landing page components for better performance
 const Hero = lazy(() => import('./components/Hero'));
 const Features = lazy(() => import('./components/Features'));
@@ -38,6 +40,7 @@ const NewsRoom = lazy(() => import('./components/NewsRoom'));
 const AdvancedCharts = lazy(() => import('./components/AdvancedCharts'));
 const TechnicalAnalysis = lazy(() => import('./components/TechnicalAnalysis'));
 const Academy = lazy(() => import('./components/Academy'));
+const ArticleDetail = lazy(() => import('./components/ArticleDetail'));
 const StraddleChart = lazy(() => import('./components/StraddleChart'));
 const Donate = lazy(() => import('./components/Donate'));
 const Settings = lazy(() => import('./components/Settings'));
@@ -86,6 +89,10 @@ function App() {
 
   // Initialize Analytics
   useAnalytics();
+
+  // Initialize Security Shield (Anti-Scraping)
+  useAntiScraping();
+
 
   const handleAuthClick = (mode: 'login' | 'signup') => {
     setAuthMode(mode);
@@ -165,6 +172,7 @@ function App() {
               <Route path="brokers" element={<Brokers />} />
               <Route path="daily-quiz" element={<DailyQuiz />} />
               <Route path="academy" element={<Academy />} />
+              <Route path="article/:id" element={<ArticleDetail />} />
               <Route path="course/:id" element={<CourseDetail />} />
               <Route path="strategy-wizard" element={<StrategyWizard />} />
               <Route path="strategy-screener" element={<StrategyScreener />} />

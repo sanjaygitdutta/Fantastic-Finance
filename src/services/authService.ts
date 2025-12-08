@@ -40,10 +40,37 @@ class AuthService {
     }
 
     /**
+     * Helper to wait for a specified duration
+     */
+    private wait(ms: number): Promise<void> {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    /**
+     * Wrapper around fetch to handle 429 Rate Limits with exponential backoff
+     */
+    private async fetchWithRetry(url: string, options: RequestInit, retries = 3, delay = 2000): Promise<Response> {
+        const response = await fetch(url, options);
+
+        if (response.status === 429) {
+            if (retries > 0) {
+                console.warn(`Upstox API Rate Limit (429). Retrying in ${delay / 1000}s...`);
+                await this.wait(delay);
+                // Exponential backoff: 2s -> 4s -> 8s
+                return this.fetchWithRetry(url, options, retries - 1, delay * 2);
+            } else {
+                throw new Error('High traffic volume. Please wait a moment and try again (429).');
+            }
+        }
+
+        return response;
+    }
+
+    /**
      * Exchange authorization code for access token
      */
     async exchangeCodeForToken(code: string): Promise<StoredTokenData> {
-        const response = await fetch(`${API_BASE}/login/authorization/token`, {
+        const response = await this.fetchWithRetry(`${API_BASE}/login/authorization/token`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
@@ -79,7 +106,7 @@ class AuthService {
             throw new Error('No refresh token available');
         }
 
-        const response = await fetch(`${API_BASE}/login/authorization/token`, {
+        const response = await this.fetchWithRetry(`${API_BASE}/login/authorization/token`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',

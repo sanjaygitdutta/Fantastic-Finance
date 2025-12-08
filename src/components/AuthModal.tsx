@@ -54,33 +54,67 @@ export default function AuthModal({ isOpen, onClose, mode, onModeChange }: AuthM
     setLoading(true);
 
     try {
-      // Check if Supabase is configured using the robust check from lib/supabase
-      // This handles cases where vars exist but are invalid URLs
-
       if (!isSupabaseConfigured) {
-        // DEMO LOGIN MODE
-        // Since no backend is configured, we'll simulate a login locally
-        const demoUser = {
-          id: 'demo-user-id',
-          email: email,
-          created_at: new Date().toISOString(),
-          user_metadata: { full_name: 'Demo User' }
-        };
+        // LOCAL AUTHENTICATION MODE (when Supabase is not configured)
+        if (mode === 'signup') {
+          // Store user credentials in localStorage
+          const users = JSON.parse(localStorage.getItem('local_users') || '[]');
 
-        localStorage.setItem('demo_user', JSON.stringify(demoUser));
+          // Check if user already exists
+          if (users.some((u: any) => u.email === email)) {
+            setError('An account with this email already exists. Please sign in instead.');
+            setLoading(false);
+            return;
+          }
 
-        // Trigger a custom event to notify useAuth
-        window.dispatchEvent(new Event('demo_login'));
+          // Create new user
+          const newUser = {
+            id: `local-${Date.now()}`,
+            email,
+            password, // In production, this should be hashed
+            created_at: new Date().toISOString(),
+            user_metadata: { full_name: email.split('@')[0] }
+          };
 
-        // Close modal and reset form
+          users.push(newUser);
+          localStorage.setItem('local_users', JSON.stringify(users));
+
+          alert('Account created successfully! You can now sign in.');
+          onModeChange('login');
+        } else {
+          // LOGIN
+          const users = JSON.parse(localStorage.getItem('local_users') || '[]');
+          const user = users.find((u: any) => u.email === email && u.password === password);
+
+          if (!user) {
+            setError('Invalid email or password. Please check your credentials and try again.');
+            setLoading(false);
+            return;
+          }
+
+          // Store session
+          const sessionUser = {
+            id: user.id,
+            email: user.email,
+            created_at: user.created_at,
+            user_metadata: user.user_metadata
+          };
+
+          localStorage.setItem('demo_user', JSON.stringify(sessionUser));
+          window.dispatchEvent(new Event('demo_login'));
+
+          // Close modal and reset form
+          onClose();
+          setEmail('');
+          setPassword('');
+          setConfirmPassword('');
+        }
+
         setLoading(false);
-        onClose();
-        setEmail('');
-        setPassword('');
-        setConfirmPassword('');
         return;
       }
 
+      // SUPABASE AUTHENTICATION MODE (when configured)
       if (mode === 'signup') {
         const { error } = await supabase.auth.signUp({
           email,
@@ -106,13 +140,24 @@ export default function AuthModal({ isOpen, onClose, mode, onModeChange }: AuthM
       setPassword('');
       setConfirmPassword('');
     } catch (err: any) {
+      console.error('Auth error:', err);
+
+      // Handle fetch/network errors
+      if (err.message?.includes('fetch') || err.message?.includes('Failed to fetch') || err.name === 'TypeError') {
+        setError('Network error. Please check your connection and try again, or use Demo Login.');
+        setLoading(false);
+        return;
+      }
+
       // Provide more user-friendly error messages
-      if (err.message.includes('Invalid login credentials')) {
+      if (err.message?.includes('Invalid login credentials')) {
         setError('Invalid email or password. Please check your credentials and try again.');
-      } else if (err.message.includes('Email not confirmed')) {
+      } else if (err.message?.includes('Email not confirmed')) {
         setError('Please verify your email address before signing in.');
-      } else if (err.message.includes('User already registered')) {
+      } else if (err.message?.includes('User already registered')) {
         setError('An account with this email already exists. Please sign in instead.');
+      } else if (err.message?.includes('Supabase not configured')) {
+        setError('Service temporarily unavailable. Please use Demo Login.');
       } else {
         setError(err.message || 'An error occurred. Please try again.');
       }
@@ -277,6 +322,25 @@ export default function AuthModal({ isOpen, onClose, mode, onModeChange }: AuthM
               ) : (
                 mode === 'login' ? 'Sign In' : 'Create Account'
               )}
+            </button>
+
+            {/* Explicit Demo Login Button */}
+            <button
+              type="button"
+              onClick={() => {
+                const demoUser = {
+                  id: 'demo-user-id',
+                  email: 'demo@fantastic.finance',
+                  created_at: new Date().toISOString(),
+                  user_metadata: { full_name: 'Demo User' }
+                };
+                localStorage.setItem('demo_user', JSON.stringify(demoUser));
+                window.dispatchEvent(new Event('demo_login'));
+                onClose();
+              }}
+              className="w-full py-3.5 mt-3 bg-white text-slate-700 border-2 border-slate-200 rounded-xl hover:bg-slate-50 transition font-semibold"
+            >
+              Run Simulation (Demo Login)
             </button>
           </form>
 

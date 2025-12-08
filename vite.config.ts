@@ -7,6 +7,15 @@ export default defineConfig({
   root: './',
   build: {
     outDir: 'dist',
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-react': ['react', 'react-dom', 'react-router-dom', 'react-helmet-async'],
+          'vendor-ui': ['lucide-react', 'recharts'],
+          'vendor-utils': ['axios', '@supabase/supabase-js']
+        }
+      }
+    }
   },
 
   server: {

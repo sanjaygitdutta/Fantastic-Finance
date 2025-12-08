@@ -8,6 +8,7 @@ interface DonationModalProps {
 
 export default function DonationModal({ isOpen, onClose }: DonationModalProps) {
     const [selectedTier, setSelectedTier] = useState<string>('coffee');
+    const [customAmount, setCustomAmount] = useState<string>('');
     const [copiedUPI, setCopiedUPI] = useState(false);
 
     // Your UPI ID (can be configured in admin dashboard later)
@@ -38,7 +39,7 @@ export default function DonationModal({ isOpen, onClose }: DonationModalProps) {
             amount: '₹500',
             icon: Crown,
             color: 'yellow',
-            badge: '👑 Patron Badge',
+            badge: '💎 Patron Badge',
             benefits: ['Gold badge in Community', 'Priority support', 'Early beta access']
         },
         {
@@ -56,7 +57,7 @@ export default function DonationModal({ isOpen, onClose }: DonationModalProps) {
             amount: '₹5,000',
             icon: Gem,
             color: 'pink',
-            badge: '💎 VIP Badge',
+            badge: '👑 VIP Badge',
             benefits: ['Platinum badge', 'Direct support line', 'Name in credits', 'Ad-free experience']
         }
     ];
@@ -67,7 +68,13 @@ export default function DonationModal({ isOpen, onClose }: DonationModalProps) {
         setTimeout(() => setCopiedUPI(false), 2000);
     };
 
-    const selectedTierData = tiers.find(t => t.id === selectedTier);
+    const selectedTierData = selectedTier === 'custom'
+        ? {
+            name: 'Custom Amount',
+            amount: customAmount ? `₹${customAmount}` : '₹0',
+            benefits: ['Our heartfelt gratitude!', 'Support independent development']
+        }
+        : tiers.find(t => t.id === selectedTier);
 
     if (!isOpen) return null;
 
@@ -139,7 +146,39 @@ export default function DonationModal({ isOpen, onClose }: DonationModalProps) {
                                 </button>
                             );
                         })}
+
+                        {/* Custom Amount Option */}
+                        <button
+                            onClick={() => setSelectedTier('custom')}
+                            className={`p-4 rounded-xl border-2 transition text-left ${selectedTier === 'custom'
+                                ? 'border-teal-500 bg-teal-50 dark:bg-teal-900/20'
+                                : 'border-slate-200 dark:border-slate-700 hover:border-slate-300'
+                                }`}
+                        >
+                            <div className="flex items-center justify-between mb-2">
+                                <Star className="w-6 h-6 text-teal-600" />
+                                <span className="font-bold text-lg">Any</span>
+                            </div>
+                            <p className="font-semibold text-sm mb-1">Your Wish</p>
+                            <p className="text-xs text-slate-600 dark:text-slate-400">Custom Amount</p>
+                        </button>
                     </div>
+
+                    {/* Custom Amount Input */}
+                    {selectedTier === 'custom' && (
+                        <div className="mb-6">
+                            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                                Enter Custom Amount (₹)
+                            </label>
+                            <input
+                                type="number"
+                                value={customAmount}
+                                onChange={(e) => setCustomAmount(e.target.value)}
+                                placeholder="e.g. 500"
+                                className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition"
+                            />
+                        </div>
+                    )}
 
                     {/* Selected Tier Benefits */}
                     {selectedTierData && (
@@ -201,10 +240,20 @@ export default function DonationModal({ isOpen, onClose }: DonationModalProps) {
                         <h4 className="font-semibold mb-2 text-sm text-slate-900 dark:text-white">
                             Why Your Support Matters
                         </h4>
-                        <p className="text-sm text-slate-600 dark:text-slate-400">
-                            Your donation helps us maintain servers, upgrade to expensive real-time data, add new features, and keep Fantastic Financial
-                            completely free for all traders. Every contribution, no matter the size, makes a difference! 🙏
+                        <p className="text-sm text-slate-600 dark:text-slate-400 mb-3">
+                            Your donation helps us maintain servers, update real-time data, and add fully functional features to keep Fantastic Financial completely free for all traders. Every contribution, no matter the size, makes a difference! 🙏
                         </p>
+                        <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3">
+                            <p className="text-xs font-semibold text-blue-900 dark:text-blue-100 mb-2">🚀 Features in Upgrade Mode:</p>
+                            <ul className="text-xs text-slate-700 dark:text-slate-300 space-y-1">
+                                <li>✨ Real-time NSE/BSE data streaming</li>
+                                <li>📊 Advanced AI-powered market predictions</li>
+                                <li>⚡ Live option chain analytics</li>
+                                <li>🔔 Instant price alerts & notifications</li>
+                                <li>💎 Premium strategy backtesting</li>
+                                <li>🌐 Multi-exchange support (NSE, BSE, MCX)</li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
 

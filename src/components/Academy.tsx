@@ -5,12 +5,13 @@ import { MultiplexAd } from './AdSense';
 
 export default function Academy() {
     const [searchQuery, setSearchQuery] = useState('');
+    const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
     const categories = [
-        { id: 'trading', name: 'Trading', icon: TrendingUp, color: 'text-blue-500', bg: 'bg-blue-50 dark:bg-blue-900/20' },
-        { id: 'investing', name: 'Investing', icon: DollarSign, color: 'text-green-500', bg: 'bg-green-50 dark:bg-green-900/20' },
-        { id: 'analysis', name: 'Analysis', icon: BarChart2, color: 'text-purple-500', bg: 'bg-purple-50 dark:bg-purple-900/20' },
-        { id: 'crypto', name: 'Crypto', icon: Globe, color: 'text-orange-500', bg: 'bg-orange-50 dark:bg-orange-900/20' },
+        { id: 'Trading', name: 'Trading', icon: TrendingUp, color: 'text-blue-500', bg: 'bg-blue-50 dark:bg-blue-900/20' },
+        { id: 'Stock Picks', name: 'Investing', icon: DollarSign, color: 'text-green-500', bg: 'bg-green-50 dark:bg-green-900/20' },
+        { id: 'Analysis', name: 'Analysis', icon: BarChart2, color: 'text-purple-500', bg: 'bg-purple-50 dark:bg-purple-900/20' },
+        { id: 'Crypto', name: 'Crypto', icon: Globe, color: 'text-orange-500', bg: 'bg-orange-50 dark:bg-orange-900/20' },
     ];
 
     const featuredArticles = [
@@ -48,7 +49,8 @@ export default function Academy() {
             lessons: 24,
             duration: '6h 30m',
             rating: 4.8,
-            image: 'https://images.unsplash.com/photo-1642543492481-44e81e3914a7?w=800&auto=format&fit=crop&q=60'
+            image: 'https://images.unsplash.com/photo-1642543492481-44e81e3914a7?w=800&auto=format&fit=crop&q=60',
+            category: 'Trading'
         },
         {
             id: 2,
@@ -57,7 +59,8 @@ export default function Academy() {
             lessons: 18,
             duration: '4h 15m',
             rating: 4.9,
-            image: 'https://images.unsplash.com/photo-1579532537598-459ecdaf39cc?w=800&auto=format&fit=crop&q=60'
+            image: 'https://images.unsplash.com/photo-1579532537598-459ecdaf39cc?w=800&auto=format&fit=crop&q=60',
+            category: 'Investing'
         },
         {
             id: 3,
@@ -66,9 +69,30 @@ export default function Academy() {
             lessons: 32,
             duration: '8h 45m',
             rating: 4.7,
-            image: 'https://images.unsplash.com/photo-1621761191319-c6fb62004040?w=800&auto=format&fit=crop&q=60'
+            image: 'https://images.unsplash.com/photo-1621761191319-c6fb62004040?w=800&auto=format&fit=crop&q=60',
+            category: 'Crypto'
         }
     ];
+
+    const handleSubscribe = () => {
+        alert("Thanks for subscribing! You'll receive our next newsletter shortly.");
+    };
+
+    const handleCategoryClick = (categoryId: string) => {
+        setSelectedCategory(prev => prev === categoryId ? null : categoryId);
+    };
+
+    const filteredArticles = featuredArticles.filter(article => {
+        const matchesSearch = article.title.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesCategory = selectedCategory ? article.category === selectedCategory : true;
+        return matchesSearch && matchesCategory;
+    });
+
+    const filteredCourses = courses.filter(course => {
+        const matchesSearch = course.title.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesCategory = selectedCategory ? (course.category === 'Investing' && selectedCategory === 'Stock Picks' ? true : course.category === selectedCategory) : true;
+        return matchesSearch && matchesCategory;
+    });
 
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white font-sans">
@@ -100,7 +124,11 @@ export default function Academy() {
                 {/* Categories */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-16">
                     {categories.map(cat => (
-                        <div key={cat.id} className={`${cat.bg} p-6 rounded-xl hover:scale-105 transition cursor-pointer border border-transparent hover:border-blue-200 dark:hover:border-blue-800`}>
+                        <div
+                            key={cat.id}
+                            onClick={() => handleCategoryClick(cat.id)}
+                            className={`${cat.bg} p-6 rounded-xl hover:scale-105 transition cursor-pointer border ${selectedCategory === cat.id ? 'border-blue-500 ring-2 ring-blue-200' : 'border-transparent'} hover:border-blue-200 dark:hover:border-blue-800`}
+                        >
                             <cat.icon className={`w-8 h-8 ${cat.color} mb-3`} />
                             <h3 className="font-bold text-lg">{cat.name}</h3>
                             <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Explore {cat.name} guides</p>
@@ -115,32 +143,40 @@ export default function Academy() {
                             <BookOpen className="w-6 h-6 text-blue-600" />
                             Popular Articles
                         </h2>
-                        <Link to="#" className="text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1">
+                        <Link to="/learning" className="text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1">
                             View all <ArrowRight className="w-4 h-4" />
                         </Link>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                        {featuredArticles.map(article => (
-                            <div key={article.id} className="bg-white dark:bg-slate-800 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition group">
-                                <div className="relative h-48 overflow-hidden">
-                                    <img src={article.image} alt={article.title} className="w-full h-full object-cover group-hover:scale-110 transition duration-500" />
-                                    <div className="absolute top-3 left-3 bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded">
-                                        {article.category}
+                    {filteredArticles.length > 0 ? (
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                            {filteredArticles.map(article => (
+                                <div key={article.id} className="bg-white dark:bg-slate-800 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition group">
+                                    <div className="relative h-48 overflow-hidden">
+                                        <img src={article.image} alt={article.title} className="w-full h-full object-cover group-hover:scale-110 transition duration-500" />
+                                        <div className="absolute top-3 left-3 bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded">
+                                            {article.category}
+                                        </div>
+                                    </div>
+                                    <div className="p-5">
+                                        <div className="flex items-center gap-2 text-xs text-slate-500 mb-2">
+                                            <span className="bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded text-slate-700 dark:text-slate-300">{article.level}</span>
+                                            <span>•</span>
+                                            <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {article.readTime}</span>
+                                        </div>
+                                        <Link to={`/article/${article.id}`}>
+                                            <h3 className="font-bold text-lg mb-2 group-hover:text-blue-600 transition">{article.title}</h3>
+                                        </Link>
+                                        <Link to={`/article/${article.id}`} className="text-blue-600 text-sm font-medium mt-2 inline-block hover:underline">Read Article</Link>
                                     </div>
                                 </div>
-                                <div className="p-5">
-                                    <div className="flex items-center gap-2 text-xs text-slate-500 mb-2">
-                                        <span className="bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded text-slate-700 dark:text-slate-300">{article.level}</span>
-                                        <span>•</span>
-                                        <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {article.readTime}</span>
-                                    </div>
-                                    <h3 className="font-bold text-lg mb-2 group-hover:text-blue-600 transition">{article.title}</h3>
-                                    <button className="text-blue-600 text-sm font-medium mt-2">Read Article</button>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="text-center py-12 text-slate-500">
+                            No articles found matching your criteria.
+                        </div>
+                    )}
                 </div>
 
                 {/* Video Courses */}
@@ -150,53 +186,59 @@ export default function Academy() {
                             <PlayCircle className="w-6 h-6 text-purple-600" />
                             Premium Courses
                         </h2>
-                        <Link to="#" className="text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1">
+                        <Link to="/learning" className="text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1">
                             Browse all courses <ArrowRight className="w-4 h-4" />
                         </Link>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                        {courses.map(course => (
-                            <div key={course.id} className="bg-white dark:bg-slate-800 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition group">
-                                <Link to={`/course/${course.id}`} className="block">
-                                    <div className="relative h-48 overflow-hidden">
-                                        <img src={course.image} alt={course.title} className="w-full h-full object-cover group-hover:scale-110 transition duration-500" />
-                                        <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
-                                            <PlayCircle className="w-12 h-12 text-white" />
+                    {filteredCourses.length > 0 ? (
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                            {filteredCourses.map(course => (
+                                <div key={course.id} className="bg-white dark:bg-slate-800 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition group">
+                                    <Link to={`/course/${course.id}`} className="block">
+                                        <div className="relative h-48 overflow-hidden">
+                                            <img src={course.image} alt={course.title} className="w-full h-full object-cover group-hover:scale-110 transition duration-500" />
+                                            <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
+                                                <PlayCircle className="w-12 h-12 text-white" />
+                                            </div>
                                         </div>
-                                    </div>
-                                </Link>
-                                <div className="p-5">
-                                    <Link to={`/course/${course.id}`}>
-                                        <h3 className="font-bold text-lg mb-1 group-hover:text-blue-600 transition">{course.title}</h3>
                                     </Link>
-                                    <p className="text-sm text-slate-500 mb-3">by {course.instructor}</p>
+                                    <div className="p-5">
+                                        <Link to={`/course/${course.id}`}>
+                                            <h3 className="font-bold text-lg mb-1 group-hover:text-blue-600 transition">{course.title}</h3>
+                                        </Link>
+                                        <p className="text-sm text-slate-500 mb-3">by {course.instructor}</p>
 
-                                    <div className="flex items-center justify-between text-sm text-slate-600 dark:text-slate-400 border-t border-slate-100 dark:border-slate-700 pt-3 mb-3">
-                                        <div className="flex items-center gap-1">
-                                            <PlayCircle className="w-4 h-4" />
-                                            {course.lessons} lessons
+                                        <div className="flex items-center justify-between text-sm text-slate-600 dark:text-slate-400 border-t border-slate-100 dark:border-slate-700 pt-3 mb-3">
+                                            <div className="flex items-center gap-1">
+                                                <PlayCircle className="w-4 h-4" />
+                                                {course.lessons} lessons
+                                            </div>
+                                            <div className="flex items-center gap-1">
+                                                <Clock className="w-4 h-4" />
+                                                {course.duration}
+                                            </div>
+                                            <div className="flex items-center gap-1 text-yellow-500 font-medium">
+                                                <Star className="w-4 h-4 fill-current" />
+                                                {course.rating}
+                                            </div>
                                         </div>
-                                        <div className="flex items-center gap-1">
-                                            <Clock className="w-4 h-4" />
-                                            {course.duration}
-                                        </div>
-                                        <div className="flex items-center gap-1 text-yellow-500 font-medium">
-                                            <Star className="w-4 h-4 fill-current" />
-                                            {course.rating}
-                                        </div>
+
+                                        <Link
+                                            to={`/course/${course.id}`}
+                                            className="block w-full bg-blue-600 hover:bg-blue-700 text-white text-center py-2 rounded-lg font-medium transition"
+                                        >
+                                            Enroll Now
+                                        </Link>
                                     </div>
-
-                                    <Link
-                                        to={`/course/${course.id}`}
-                                        className="block w-full bg-blue-600 hover:bg-blue-700 text-white text-center py-2 rounded-lg font-medium transition"
-                                    >
-                                        Enroll Now
-                                    </Link>
                                 </div>
-                            </div>
-                        ))}
-                    </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="text-center py-12 text-slate-500">
+                            No courses found matching your criteria.
+                        </div>
+                    )}
                 </div>
 
                 {/* Newsletter CTA */}
@@ -213,7 +255,9 @@ export default function Academy() {
                                 placeholder="Enter your email address"
                                 className="flex-1 px-4 py-3 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-400"
                             />
-                            <button className="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-lg font-bold transition">
+                            <button
+                                onClick={handleSubscribe}
+                                className="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-lg font-bold transition">
                                 Subscribe
                             </button>
                         </div>

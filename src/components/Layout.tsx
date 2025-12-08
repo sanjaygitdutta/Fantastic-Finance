@@ -16,18 +16,35 @@ export default function Layout() {
     const [donationModalOpen, setDonationModalOpen] = useState(false);
 
     const handleSignOut = async () => {
-        // Clear demo user
-        localStorage.removeItem('demo_user');
-        window.dispatchEvent(new Event('demo_login'));
+        try {
+            console.log('Signing out...');
+            // 1. Clear Application State
+            localStorage.removeItem('demo_user');
+            localStorage.removeItem('upstox_access_token');
+            localStorage.removeItem('upstox_refresh_token');
 
-        // Clear Upstox auth
-        localStorage.removeItem('upstox_access_token');
+            // 2. Clear Supabase Tokens (Manual Fail-safe)
+            // This ensures useAuth doesn't automatically re-login the user on reload
+            Object.keys(localStorage).forEach(key => {
+                if (key.startsWith('sb-') && key.endsWith('-auth-token')) {
+                    localStorage.removeItem(key);
+                }
+            });
 
-        // Sign out from Supabase
-        await supabase.auth.signOut();
+            // 3. Dispatch Events to update UI immediately
+            window.dispatchEvent(new Event('demo_login'));
+            window.dispatchEvent(new Event('storage'));
 
-        // Force reload/redirect to home
-        window.location.href = '/';
+            // 4. API Sign Out (best effort, don't block if network fails)
+            await supabase.auth.signOut().catch(err => console.warn('Supabase signout suppressed:', err));
+
+        } catch (error) {
+            console.error('Sign out logic error:', error);
+        } finally {
+            // 5. Hard Redirect (Replace history to prevent back-button return)
+            console.log('Redirecting to landing page...');
+            window.location.replace('/');
+        }
     };
 
     const isActive = (path: string) => location.pathname === path;
