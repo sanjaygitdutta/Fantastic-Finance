@@ -1,8 +1,15 @@
 {
-    "rewrites": [
+    "routes": [
         {
-            "source": "/((?!google01b26828ad00a32b\\.html$).*)",
-            "destination": "/"
+            "src": "/google01b26828ad00a32b.html",
+            "dest": "/google01b26828ad00a32b.html"
+        },
+        {
+            "handle": "filesystem"
+        },
+        {
+            "src": "/(.*)",
+            "dest": "/index.html"
         }
     ],
     "headers": [
