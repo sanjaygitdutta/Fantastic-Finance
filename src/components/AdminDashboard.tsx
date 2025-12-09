@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Users, Activity, TrendingUp, MessageSquare, LogOut, Shield, BarChart3, Settings, AlertCircle, Mail, Loader2, Clock, Smartphone, Monitor, X } from 'lucide-react';
+import { Users, Activity, TrendingUp, MessageSquare, LogOut, Shield, BarChart3, Settings, AlertCircle, Mail, Loader2, Clock, Smartphone, Monitor, X, RefreshCw } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAdminAuth } from '../context/AdminAuthContext';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell, Legend } from 'recharts';
@@ -37,23 +37,106 @@ export default function AdminDashboard() {
     const [userActivity, setUserActivity] = useState<any[]>([]);
     const [adsenseClientId, setAdsenseClientId] = useState(import.meta.env.VITE_ADSENSE_CLIENT_ID || '');
     const [adsenseSaved, setAdsenseSaved] = useState(false);
+    const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
+    const [refreshing, setRefreshing] = useState(false);
 
     const handleLogout = () => {
         adminLogout();
         navigate('/admin/login');
     };
 
+    // Effect 1: Auto-refresh stats every 30 seconds
     useEffect(() => {
+        // Initial fetch
+        fetchStats();
+
+        // Set up polling interval (30 seconds)
+        const statsInterval = setInterval(() => {
+            fetchStats();
+        }, 30000);
+
+        return () => clearInterval(statsInterval);
+    }, []);
+
+    // Effect 2: Tab-specific data with auto-refresh
+    useEffect(() => {
+        let interval: NodeJS.Timeout | null = null;
+
         if (activeTab === 'messages') {
             fetchMessages();
+            interval = setInterval(fetchMessages, 30000);
         } else if (activeTab === 'content') {
             fetchCommunityPosts();
+            interval = setInterval(fetchCommunityPosts, 30000);
         } else if (activeTab === 'users') {
             fetchUsers();
+            interval = setInterval(fetchUsers, 30000);
         }
-        // Always fetch stats on mount
-        fetchStats();
+
+        return () => {
+            if (interval) clearInterval(interval);
+        };
     }, [activeTab]);
+
+    // Effect 3: Real-time subscriptions for instant updates
+    useEffect(() => {
+        // Subscribe to new users
+        const usersChannel = supabase
+            .channel('admin-users')
+            .on('postgres_changes',
+                { event: '*', schema: 'public', table: 'profiles' },
+                () => {
+                    fetchUsers();
+                    fetchStats(); // Update total users count
+                    setLastUpdated(new Date());
+                }
+            )
+            .subscribe();
+
+        // Subscribe to new messages
+        const messagesChannel = supabase
+            .channel('admin-messages')
+            .on('postgres_changes',
+                { event: '*', schema: 'public', table: 'contact_messages' },
+                () => {
+                    fetchMessages();
+                    fetchStats(); // Update message count
+                    setLastUpdated(new Date());
+                }
+            )
+            .subscribe();
+
+        // Subscribe to community posts
+        const postsChannel = supabase
+            .channel('admin-posts')
+            .on('postgres_changes',
+                { event: '*', schema: 'public', table: 'community_posts' },
+                () => {
+                    fetchCommunityPosts();
+                    setLastUpdated(new Date());
+                }
+            )
+            .subscribe();
+
+        // Subscribe to analytics events for real-time activity
+        const analyticsChannel = supabase
+            .channel('admin-analytics')
+            .on('postgres_changes',
+                { event: 'INSERT', schema: 'public', table: 'analytics_events' },
+                () => {
+                    fetchStats(); // Update daily active users
+                    setLastUpdated(new Date());
+                }
+            )
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(usersChannel);
+            supabase.removeChannel(messagesChannel);
+            supabase.removeChannel(postsChannel);
+            supabase.removeChannel(analyticsChannel);
+        };
+    }, []);
 
     const fetchUsers = async () => {
         try {

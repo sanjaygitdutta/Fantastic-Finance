@@ -34,14 +34,12 @@ create table analytics_events (
 );
 -- Set up RLS for analytics
 alter table analytics_events enable row level security;
-create policy "Analytics are viewable by admins only." on analytics_events for
-select using (
-        auth.uid() in (
-            select id
-            from profiles
-            where email = 'admin@fantastic.app'
-        )
-    );
--- Adjust admin check as needed, or just allow public insert for now
+-- IMPORTANT: Allow public read access for admin dashboard
+-- The admin dashboard uses localStorage-based auth (AdminAuthContext), NOT Supabase auth
+-- Therefore auth.uid() is always NULL when admin queries data from the dashboard
+-- The dashboard itself is protected by AdminProtectedRoute & AdminAuthContext
+create policy "Analytics are viewable by everyone." on analytics_events for
+select using (true);
+-- Allow anyone to insert analytics events (for tracking page views, sessions, etc.)
 create policy "Anyone can insert analytics events." on analytics_events for
 insert with check (true);

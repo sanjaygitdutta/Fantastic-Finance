@@ -62,6 +62,46 @@ const realSupabase = createClient(urlToUse, keyToUse, {
 });
 
 // Mock client to prevent ANY network requests when not configured
+// This must support all methods used by analytics and admin dashboard
+
+// Create a chainable mock query builder that returns empty results
+const createMockQueryBuilder = () => {
+    const builder: any = {
+        select: () => builder,
+        insert: async () => ({ data: null, error: null }),
+        update: () => builder,
+        delete: () => builder,
+        upsert: async () => ({ data: null, error: null }),
+        eq: () => builder,
+        neq: () => builder,
+        gte: () => builder,
+        lte: () => builder,
+        gt: () => builder,
+        lt: () => builder,
+        like: () => builder,
+        ilike: () => builder,
+        is: () => builder,
+        in: () => builder,
+        order: () => builder,
+        limit: () => builder,
+        range: () => builder,
+        single: async () => ({ data: null, error: null }),
+        maybeSingle: async () => ({ data: null, error: null }),
+        // Support async iteration / await
+        then: (resolve: any) => resolve({ data: [], count: 0, error: null }),
+    };
+    return builder;
+};
+
+// Create a mock channel for real-time subscriptions
+const createMockChannel = () => {
+    const channel: any = {
+        on: () => channel,
+        subscribe: () => channel,
+    };
+    return channel;
+};
+
 const mockSupabase = {
     auth: {
         getSession: async () => ({ data: { session: null }, error: null }),
@@ -70,17 +110,9 @@ const mockSupabase = {
         signInWithPassword: async () => ({ data: null, error: new Error('Supabase not configured') }),
         signOut: async () => ({ error: null }),
     },
-    from: () => ({
-        select: () => ({
-            eq: () => ({
-                single: async () => ({ data: null, error: null }),
-                data: null,
-                error: null
-            }),
-            data: null,
-            error: null
-        })
-    })
+    from: (_table: string) => createMockQueryBuilder(),
+    channel: (_name: string) => createMockChannel(),
+    removeChannel: (_channel: any) => { },
 } as any;
 
 export const supabase = isSupabaseConfigured ? realSupabase : mockSupabase;
