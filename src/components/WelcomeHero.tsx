@@ -9,7 +9,7 @@ export default function WelcomeHero({ userName = 'Trader' }: WelcomeHeroProps) {
     const [currentTime, setCurrentTime] = useState(new Date());
 
     useEffect(() => {
-        const timer = setInterval(() => setCurrentTime(new Date()), 60000);
+        const timer = setInterval(() => setCurrentTime(new Date()), 1000); // Update every second
         return () => clearInterval(timer);
     }, []);
 
@@ -22,6 +22,24 @@ export default function WelcomeHero({ userName = 'Trader' }: WelcomeHeroProps) {
     };
 
     const greeting = getGreeting();
+
+    // Format time for IST (already in IST since running in India)
+    const istTime = currentTime.toLocaleTimeString('en-IN', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true,
+        timeZone: 'Asia/Kolkata'
+    });
+
+    // Format time for EST
+    const estTime = currentTime.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true,
+        timeZone: 'America/New_York'
+    });
 
     // Mock data - in real app, fetch from user profile/API
     const userStats = {
@@ -59,11 +77,17 @@ export default function WelcomeHero({ userName = 'Trader' }: WelcomeHeroProps) {
                         <div className="flex items-center gap-3 mb-2">
                             <span className="text-4xl">{greeting.emoji}</span>
                             <div>
-                                <h1 className="text-3xl md:text-4xl font-bold">
-                                    {greeting.text}, {userName}!
-                                    <span className="ml-3 text-xl md:text-2xl font-normal opacity-90">
-                                        {currentTime.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })}
-                                    </span>
+                                <h1 className="text-3xl md:text-4xl font-bold flex flex-wrap items-center gap-2">
+                                    <span>{greeting.text}, {userName}!</span>
+                                    <div className="flex items-center gap-2 text-base md:text-lg font-medium bg-white/20 px-3 py-1 rounded-full">
+                                        <span className="flex items-center gap-1">
+                                            🇮🇳 <span className="font-mono">{istTime}</span>
+                                        </span>
+                                        <span className="opacity-60">|</span>
+                                        <span className="flex items-center gap-1">
+                                            🇺🇸 <span className="font-mono">{estTime}</span>
+                                        </span>
+                                    </div>
                                 </h1>
                                 <p className="text-white/90 text-sm mt-1">
                                     {userStats.marketStatus === 'Open' ? (
