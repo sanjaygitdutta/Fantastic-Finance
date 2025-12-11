@@ -73,6 +73,8 @@ const Currency = lazy(() => import('./components/Currency'));
 const Commodity = lazy(() => import('./components/Commodity'));
 const Review = lazy(() => import('./components/Review'));
 const Brokers = lazy(() => import('./pages/Brokers'));
+const StrategyRecommendations = lazy(() => import('./components/StrategyRecommendations'));
+const AIAssistant = lazy(() => import('./components/AIAssistant'));
 import AdminProtectedRoute from './components/AdminProtectedRoute';
 
 // Loading Fallback Component
@@ -224,6 +226,12 @@ function App() {
                 <Navigation onLoginClick={() => handleAuthClick('login')} />
                 <Suspense fallback={<PageLoader />}>
                   <Hero onSignUpClick={() => handleAuthClick('signup')} />
+
+                  {/* AI Recommendations Section */}
+                  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-20 relative z-10 mb-20">
+                    <StrategyRecommendations />
+                  </div>
+
                   <Features />
                   <Statistics />
                   <HowItWorks />
@@ -231,6 +239,7 @@ function App() {
                   <About />
                   <Contact />
                   <Footer />
+                  <AIAssistant />
                   <AuthModal
                     isOpen={showAuthModal}
                     onClose={() => setShowAuthModal(false)}

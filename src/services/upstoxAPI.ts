@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { authService } from './authService';
 
 const UPSTOX_API_BASE = 'https://api.upstox.com/v2';
 
@@ -15,65 +16,45 @@ export interface UpstoxQuote {
 }
 
 class UpstoxAPI {
-    private accessToken: string | null = null;
-
     constructor() {
-        // Load token from localStorage if exists
-        this.accessToken = localStorage.getItem('upstox_access_token');
+        // Token management is now handled by authService
     }
 
-    setAccessToken(token: string) {
-        this.accessToken = token;
-        localStorage.setItem('upstox_access_token', token);
+    setAccessToken(_token: string) {
+        // Deprecated: Tokens are managed by authService
+        console.warn('upstoxAPI.setAccessToken is deprecated. Use authService directly.');
     }
 
     clearAccessToken() {
-        this.accessToken = null;
-        localStorage.removeItem('upstox_access_token');
+        authService.clearTokens();
     }
 
     isAuthenticated(): boolean {
-        return !!this.accessToken;
+        return authService.isAuthenticated();
     }
 
     // Generate authorization URL
     getAuthorizationUrl(): string {
-        const apiKey = import.meta.env.VITE_UPSTOX_API_KEY;
-        const redirectUri = import.meta.env.VITE_UPSTOX_REDIRECT_URI;
-
-        return `https://api.upstox.com/v2/login/authorization/dialog?client_id=${apiKey}&redirect_uri=${redirectUri}&response_type=code`;
+        return authService.getLoginUrl();
     }
 
     // Exchange authorization code for access token
     async getAccessToken(authCode: string): Promise<string> {
-        try {
-            const response = await axios.post(`${UPSTOX_API_BASE}/login/authorization/token`, {
-                code: authCode,
-                client_id: import.meta.env.VITE_UPSTOX_API_KEY,
-                client_secret: import.meta.env.VITE_UPSTOX_API_SECRET,
-                redirect_uri: import.meta.env.VITE_UPSTOX_REDIRECT_URI,
-                grant_type: 'authorization_code'
-            });
-
-            const { access_token } = response.data;
-            this.setAccessToken(access_token);
-            return access_token;
-        } catch (error) {
-            console.error('Error getting access token:', error);
-            throw error;
-        }
+        const tokenData = await authService.exchangeCodeForToken(authCode);
+        return tokenData.accessToken;
     }
 
     // Get market quotes for multiple instruments
     async getQuotes(instrumentKeys: string[]): Promise<Record<string, UpstoxQuote>> {
-        if (!this.accessToken) {
+        const accessToken = await authService.getValidAccessToken();
+        if (!accessToken) {
             throw new Error('Not authenticated');
         }
 
         try {
             const response = await axios.get(`${UPSTOX_API_BASE}/market-quote/quotes`, {
                 headers: {
-                    'Authorization': `Bearer ${this.accessToken}`,
+                    'Authorization': `Bearer ${accessToken}`,
                     'Accept': 'application/json'
                 },
                 params: {
@@ -106,57 +87,77 @@ class UpstoxAPI {
     }
 
     // Create WebSocket connection for real-time data
-    createMarketDataFeed(instrumentKeys: string[], onUpdate: (data: any) => void): WebSocket {
-        if (!this.accessToken) {
+    async createMarketDataFeed(instrumentKeys: string[], onUpdate: (data: any) => void): Promise<WebSocket> {
+        const accessToken = await authService.getValidAccessToken();
+        if (!accessToken) {
             throw new Error('Not authenticated');
         }
 
-        const ws = new WebSocket(`wss://api.upstox.com/v2/feed/market-data-feed/authorize?access_token=${this.accessToken}`);
+        // We need to authorize the websocket connection first
+        // This mirrors logic in LivePriceContext somewhat, but upstoxAPI handles it simply for now
+        // NOTE: LivePriceContext is the preferred way to consume data in this app
 
-        ws.onopen = () => {
-            console.log('Upstox WebSocket connected');
-
-            // Subscribe to instruments
-            ws.send(JSON.stringify({
-                guid: 'someguid',
-                method: 'sub',
-                data: {
-                    mode: 'full',
-                    instrumentKeys: instrumentKeys
+        try {
+            // Get authorized URL
+            const response = await axios.get(`${UPSTOX_API_BASE}/feed/market-data-feed/authorize`, {
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`,
+                    'Accept': 'application/json'
                 }
-            }));
-        };
+            });
 
-        ws.onmessage = (event) => {
-            try {
-                const data = JSON.parse(event.data);
-                onUpdate(data);
-            } catch (error) {
-                console.error('Error parsing WebSocket message:', error);
-            }
-        };
+            const authorizedUrl = response.data.data.authorizedRedirectUri;
+            const ws = new WebSocket(authorizedUrl);
 
-        ws.onerror = (error) => {
-            console.error('WebSocket error:', error);
-        };
+            ws.onopen = () => {
+                console.log('Upstox WebSocket connected');
 
-        ws.onclose = () => {
-            console.log('Upstox WebSocket disconnected');
-        };
+                // Subscribe to instruments
+                ws.send(JSON.stringify({
+                    guid: 'someguid',
+                    method: 'sub',
+                    data: {
+                        mode: 'full',
+                        instrumentKeys: instrumentKeys
+                    }
+                }));
+            };
 
-        return ws;
+            ws.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    onUpdate(data);
+                } catch (error) {
+                    console.error('Error parsing WebSocket message:', error);
+                }
+            };
+
+            ws.onerror = (error) => {
+                console.error('WebSocket error:', error);
+            };
+
+            ws.onclose = () => {
+                console.log('Upstox WebSocket disconnected');
+            };
+
+            return ws;
+        } catch (error) {
+            console.error('Error creating market data feed:', error);
+            throw error;
+        }
     }
 
     // Get user profile
     async getUserProfile() {
-        if (!this.accessToken) {
+        const accessToken = await authService.getValidAccessToken();
+        if (!accessToken) {
             throw new Error('Not authenticated');
         }
 
         try {
             const response = await axios.get(`${UPSTOX_API_BASE}/user/profile`, {
                 headers: {
-                    'Authorization': `Bearer ${this.accessToken}`,
+                    'Authorization': `Bearer ${accessToken}`,
                     'Accept': 'application/json'
                 }
             });

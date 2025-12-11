@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { upstoxAPI } from '../services/upstoxAPI';
+import { authService } from '../services/authService';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
 export function useUpstoxAuth() {
@@ -9,8 +10,8 @@ export function useUpstoxAuth() {
     const navigate = useNavigate();
 
     useEffect(() => {
-        // Check if already authenticated
-        setIsAuthenticated(upstoxAPI.isAuthenticated());
+        // Check if already authenticated using authService
+        setIsAuthenticated(authService.isAuthenticated());
         setIsLoading(false);
 
         // Handle OAuth callback
