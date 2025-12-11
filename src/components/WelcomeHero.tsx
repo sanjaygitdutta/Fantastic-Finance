@@ -61,6 +61,9 @@ export default function WelcomeHero({ userName = 'Trader' }: WelcomeHeroProps) {
                             <div>
                                 <h1 className="text-3xl md:text-4xl font-bold">
                                     {greeting.text}, {userName}!
+                                    <span className="ml-3 text-xl md:text-2xl font-normal opacity-90">
+                                        {currentTime.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })}
+                                    </span>
                                 </h1>
                                 <p className="text-white/90 text-sm mt-1">
                                     {userStats.marketStatus === 'Open' ? (

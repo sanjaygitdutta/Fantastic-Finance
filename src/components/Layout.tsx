@@ -1,7 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link, useLocation, Outlet } from 'react-router-dom';
-import { TrendingUp, Globe, Newspaper, Zap, BarChart2, Activity, Users, Filter, GraduationCap, Heart, User, Settings as SettingsIcon, LogOut, Menu, X, Star, Briefcase, Bell, Calendar, TrendingUpIcon, Link as LinkIcon, Calculator, Brain, Shield, DollarSign, Sun, Moon, Sunrise, Sunset } from 'lucide-react';
-import { useAuth } from '../hooks/useAuth';
+import { TrendingUp, Globe, Newspaper, Zap, BarChart2, Activity, Users, Filter, GraduationCap, Heart, User, Settings as SettingsIcon, LogOut, Menu, X, Star, Briefcase, Bell, Calendar, TrendingUpIcon, Link as LinkIcon, Calculator, Brain, Shield } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import MarketPulse from './MarketPulse';
 import AIAssistant from './AIAssistant';
@@ -10,36 +9,10 @@ import DonationModal from './DonationModal';
 import Footer from './Footer';
 import Breadcrumbs from './Breadcrumbs';
 
-// Helper function to get greeting based on hour
-const getGreeting = () => {
-    const hour = new Date().getHours();
-    if (hour >= 5 && hour < 12) {
-        return { text: 'Good Morning, Trader! ☀️', icon: Sunrise, color: 'from-orange-400 to-yellow-400' };
-    } else if (hour >= 12 && hour < 17) {
-        return { text: 'Good Afternoon, Trader! 🌤️', icon: Sun, color: 'from-yellow-400 to-amber-500' };
-    } else if (hour >= 17 && hour < 21) {
-        return { text: 'Good Evening, Trader! 🌅', icon: Sunset, color: 'from-orange-500 to-pink-500' };
-    } else {
-        return { text: 'Good Night, Trader! 🌙', icon: Moon, color: 'from-indigo-500 to-purple-600' };
-    }
-};
-
 export default function Layout() {
     const location = useLocation();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [donationModalOpen, setDonationModalOpen] = useState(false);
-    const [greeting, setGreeting] = useState(getGreeting());
-    const [currentTime, setCurrentTime] = useState(new Date());
-
-    // Update greeting and time every minute
-    useEffect(() => {
-        const interval = setInterval(() => {
-            setGreeting(getGreeting());
-            setCurrentTime(new Date());
-        }, 60000); // Update every minute
-
-        return () => clearInterval(interval);
-    }, []);
 
     const handleSignOut = async () => {
         try {
@@ -62,7 +35,7 @@ export default function Layout() {
             window.dispatchEvent(new Event('storage'));
 
             // 4. API Sign Out (best effort, don't block if network fails)
-            await supabase.auth.signOut().catch(err => console.warn('Supabase signout suppressed:', err));
+            await supabase.auth.signOut().catch((err: Error) => console.warn('Supabase signout suppressed:', err));
 
         } catch (error) {
             console.error('Sign out logic error:', error);
@@ -77,23 +50,8 @@ export default function Layout() {
 
     const closeMobileMenu = () => setIsMobileMenuOpen(false);
 
-    const GreetingIcon = greeting.icon;
-
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-950 flex flex-col">
-            {/* Real-time Greeting Banner */}
-            <div className={`bg-gradient-to-r ${greeting.color} text-white py-2 px-4`}>
-                <div className="max-w-7xl mx-auto flex items-center justify-center gap-3">
-                    <GreetingIcon className="w-5 h-5 animate-pulse" />
-                    <span className="font-semibold text-sm sm:text-base tracking-wide">
-                        {greeting.text}
-                    </span>
-                    <span className="text-xs sm:text-sm opacity-90 ml-2">
-                        {currentTime.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })}
-                    </span>
-                </div>
-            </div>
-
             <nav className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 transition-colors duration-200">
                 <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex justify-between items-center h-16">
