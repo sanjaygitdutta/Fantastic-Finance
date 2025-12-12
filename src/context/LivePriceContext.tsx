@@ -382,50 +382,73 @@ export function LivePriceProvider({ children }: { children: ReactNode }) {
         }
     }, [connectWebSocket, simulatePrices]);
 
-    // Function to fetch from our local Python API
+    // Function to fetch from our local Python API (Batch Mode)
     const fetchFromLocalApi = useCallback(async () => {
         try {
             const symbols = Object.keys(INITIAL_PRICES);
-            const updates: Record<string, PriceData> = {};
-            let hasUpdates = false;
 
-            // Fetch concurrently for better performance
-            await Promise.all(symbols.map(async (symbol) => {
-                const yfSymbol = YFINANCE_MAP[symbol];
-                if (!yfSymbol) return;
+            // Gather all YFinance symbols needed
+            const yfSymbolsToFetch = new Set<string>();
+            const reverseMap: Record<string, string[]> = {}; // yfSymbol -> [appSymbols]
 
-                try {
-                    const res = await fetch(`/api/stock?symbol=${yfSymbol}`);
-                    if (res.ok) {
-                        const data = await res.json();
-                        // Check if we got valid price data
-                        if (data.currentPrice) {
-                            updates[symbol] = {
-                                symbol: symbol,
-                                price: data.currentPrice,
-                                change: data.currentPrice - (data.previousClose || data.open || data.currentPrice),
-                                changePercent: data.previousClose ? ((data.currentPrice - data.previousClose) / data.previousClose * 100) : 0
-                            };
-                            hasUpdates = true;
-                        }
-                    }
-                } catch (e) {
-                    // Fail silently for individual stock fetch errors
-                    console.warn(`Failed to fetch ${symbol} from local API`, e);
+            symbols.forEach(appSymbol => {
+                const yf = YFINANCE_MAP[appSymbol];
+                if (yf) {
+                    yfSymbolsToFetch.add(yf);
+                    if (!reverseMap[yf]) reverseMap[yf] = [];
+                    reverseMap[yf].push(appSymbol);
                 }
-            }));
+            });
 
-            if (hasUpdates) {
+            if (yfSymbolsToFetch.size === 0) return;
+
+            // Make single batch request
+            const symbolsParam = Array.from(yfSymbolsToFetch).join(',');
+            const res = await fetch(`/api/stock?symbols=${encodeURIComponent(symbolsParam)}`);
+
+            if (!res.ok) {
+                console.warn(`Local API batch fetch failed: ${res.status}`);
+                // Only simulate if API is completely down
+                simulatePrices();
+                return;
+            }
+
+            const data = await res.json();
+            const results = data.results || [];
+
+            if (results.length > 0) {
+                const updates: Record<string, PriceData> = {};
+
+                results.forEach((item: any) => {
+                    const yfSym = item.symbol;
+                    const appSymbols = reverseMap[yfSym];
+
+                    if (appSymbols) {
+                        appSymbols.forEach(appSym => {
+                            // Yahoo data already has change/changePercent, or calculate it
+                            const price = item.currentPrice;
+                            const prevClose = item.previousClose || item.open || price;
+                            const change = item.change !== undefined ? item.change : (price - prevClose);
+                            const changePercent = item.changePercent !== undefined ? item.changePercent : ((change / prevClose) * 100);
+
+                            updates[appSym] = {
+                                symbol: appSym,
+                                price: price,
+                                change: change,
+                                changePercent: changePercent
+                            };
+                        });
+                    }
+                });
+
                 setPrices(prev => ({
                     ...prev,
                     ...updates
                 }));
-                setUsingLiveApi(true);
+                setUsingLiveApi(true); // Technically using "Live" data from Yahoo
                 setLastUpdated(new Date());
-            } else {
-                // Fallback to simulation if massive failure
-                simulatePrices();
             }
+
         } catch (error) {
             console.error("Local API fetch failed:", error);
             simulatePrices();

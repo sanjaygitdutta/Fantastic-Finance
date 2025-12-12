@@ -4,9 +4,10 @@ import requests
 import random
 
 app = Flask(__name__)
+# Allow CORS for all domains
 CORS(app)
 
-# List of user agents to rotate to avoid simple blocking
+# List of user agents to rotate
 USER_AGENTS = [
     'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36',
     'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36',
@@ -15,56 +16,65 @@ USER_AGENTS = [
 
 @app.route('/api/stock', methods=['GET'])
 def get_stock():
-    symbol = request.args.get('symbol')
-    if not symbol:
-        return jsonify({'error': 'Symbol is required'}), 400
+    symbols_param = request.args.get('symbol') or request.args.get('symbols')
+    if not symbols_param:
+        return jsonify({'error': 'Symbol(s) required'}), 400
 
     try:
-        # Use Yahoo Finance Chart API (Lightweight, JSON)
-        # This endpoint often works without complex auth for basic data
-        url = f"https://query1.finance.yahoo.com/v8/finance/chart/{symbol}?interval=1d&range=1d"
+        # Use Yahoo Finance Quote API (Batch support)
+        # https://query1.finance.yahoo.com/v7/finance/quote?symbols=AAPL,GOOG
+        url = f"https://query1.finance.yahoo.com/v7/finance/quote?symbols={symbols_param}"
         
         headers = {
             'User-Agent': random.choice(USER_AGENTS),
             'Accept': '*/*'
         }
 
-        response = requests.get(url, headers=headers, timeout=5)
+        # Timeout increased slightly for batch
+        response = requests.get(url, headers=headers, timeout=8)
         
+        # Failover to query2 if query1 fails
         if response.status_code != 200:
-             # Try failover to query2
-            url = f"https://query2.finance.yahoo.com/v8/finance/chart/{symbol}?interval=1d&range=1d"
-            response = requests.get(url, headers=headers, timeout=5)
+            url = f"https://query2.finance.yahoo.com/v7/finance/quote?symbols={symbols_param}"
+            response = requests.get(url, headers=headers, timeout=8)
             
         if response.status_code != 200:
             return jsonify({'error': f'Upstream error: {response.status_code}'}), response.status_code
 
         data = response.json()
-        result = data.get('chart', {}).get('result', [])
+        results = data.get('quoteResponse', {}).get('result', [])
         
-        if not result:
-            return jsonify({'error': 'No data found'}), 404
+        if not results:
+             return jsonify({'error': 'No data found', 'raw': data}), 404
 
-        meta = result[0].get('meta', {})
+        # Response list
+        mapped_results = []
         
-        # Map Yahoo Finance fields to our API format
-        api_data = {
-            'symbol': symbol,
-            'currentPrice': meta.get('regularMarketPrice'),
-            'previousClose': meta.get('previousClose'),
-            'open': meta.get('regularMarketOpen'),
-            'dayHigh': meta.get('regularMarketDayHigh'),
-            'dayLow': meta.get('regularMarketDayLow'),
-            'volume': meta.get('regularMarketVolume'),
-            'marketCap': meta.get('marketCap'), # Note: Chart API doesn't always have marketCap
-            'shortName': meta.get('shortName') or meta.get('symbol'),
-            'longName': meta.get('longName') or meta.get('exchangeName'),
-            'currency': meta.get('currency'),
-            'exchange': meta.get('exchangeName')
-        }
+        for item in results:
+             mapped_results.append({
+                'symbol': item.get('symbol'),
+                'currentPrice': item.get('regularMarketPrice'),
+                'previousClose': item.get('regularMarketPreviousClose'),
+                'open': item.get('regularMarketOpen'),
+                'dayHigh': item.get('regularMarketDayHigh'),
+                'dayLow': item.get('regularMarketDayLow'),
+                'volume': item.get('regularMarketVolume'),
+                'marketCap': item.get('marketCap'),
+                'shortName': item.get('shortName'),
+                'longName': item.get('longName'),
+                'currency': item.get('currency'),
+                'exchange': item.get('exchange'),
+                'change': item.get('regularMarketChange'),
+                'changePercent': item.get('regularMarketChangePercent')
+            })
         
-        flask_res = jsonify(api_data)
-        # Cache for 10 seconds to reduce load/rate-limiting
+        # If single symbol was requested but returned as list, structure it to match old API if needed?
+        # But better to just always return a list or let frontend handle it. 
+        # For compatibility with potential existing single-fetch calls, if mapped_results len is 1, maybe return object? 
+        # The frontend logic I'm writing will handle a list.
+        
+        flask_res = jsonify({'results': mapped_results})
+        # Cache for 10 seconds
         flask_res.headers['Cache-Control'] = 'public, max-age=10, s-maxage=10'
         return flask_res
 
@@ -73,8 +83,7 @@ def get_stock():
 
 @app.route('/api/search', methods=['GET'])
 def search_stocks():
-    return jsonify({'message': 'Search functionality not implemented in lightweight mode'})
+     return jsonify({'message': 'Search functionality not implemented'})
 
-# For local testing
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, port=3001)
