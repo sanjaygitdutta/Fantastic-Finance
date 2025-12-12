@@ -25,14 +25,19 @@ interface GreeksData {
     vega: number;
 }
 
+import { useLocation } from 'react-router-dom';
+
 export default function StrategyBuilder() {
     const { logEvent } = useAnalytics();
+    const location = useLocation();
+    const initialState = location.state as { strategyName?: string; legs?: OptionLeg[] } | null;
+
     const [activeTab, setActiveTab] = useState<'builder' | 'backtest' | 'templates'>('builder');
     const [categoryFilter, setCategoryFilter] = useState<'All' | 'Bullish' | 'Bearish' | 'Neutral'>('All');
     const [symbol, setSymbol] = useState('NIFTY 50');
-    const [spotPrice, setSpotPrice] = useState(22000);
-    const [legs, setLegs] = useState<OptionLeg[]>([]);
-    const [strategyName, setStrategyName] = useState('Custom Strategy');
+    const [spotPrice, setSpotPrice] = useState(24500); // Updated default
+    const [legs, setLegs] = useState<OptionLeg[]>(initialState?.legs || []);
+    const [strategyName, setStrategyName] = useState(initialState?.strategyName || 'Custom Strategy');
     const [backtestResults, setBacktestResults] = useState<any>(null);
 
     const { portfolio } = usePaperTrading();
@@ -42,8 +47,12 @@ export default function StrategyBuilder() {
     })), spotPrice) : null;
 
     useEffect(() => {
-        logEvent('feature_used', { feature: 'Strategy Builder' });
-    }, []);
+        if (initialState?.strategyName) {
+            logEvent('feature_used', { feature: 'Strategy Builder - Deployed from AI', strategyName: initialState.strategyName });
+        } else {
+            logEvent('feature_used', { feature: 'Strategy Builder' });
+        }
+    }, [initialState]);
 
     // Dynamic Strategy Templates
     const templates = [

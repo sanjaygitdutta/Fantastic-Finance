@@ -162,6 +162,33 @@ export default function StrategyRecommendations() {
                                     <div className="flex gap-3">
                                         <Link
                                             to="/strategy-builder"
+                                            state={{
+                                                strategyName: strategy.name,
+                                                legs: strategy.instruments.map((inst, i) => {
+                                                    // Simple parser for demo instruments like 'NIFTY 24500 CE'
+                                                    const parts = inst.split(' ');
+                                                    const strike = parseInt(parts[1]);
+                                                    const type = parts[2] as 'CE' | 'PE' ? (parts[2] === 'CE' ? 'CALL' : 'PUT') : 'CALL';
+                                                    // Infer action based on strategy type for demo simplicity
+                                                    // Real logic would need robust parsing or explicit data in strategy object
+                                                    let action: 'BUY' | 'SELL' = 'BUY';
+                                                    if (strategy.name === 'Iron Condor') {
+                                                        action = (i === 1 || i === 2) ? 'SELL' : 'BUY';
+                                                    } else if (strategy.name === 'Bull Call Spread') {
+                                                        action = i === 1 ? 'SELL' : 'BUY';
+                                                    }
+
+                                                    return {
+                                                        id: `auto-${i}`,
+                                                        type: type,
+                                                        action: action,
+                                                        strike: strike || 24500,
+                                                        premium: 100, // Mock premium
+                                                        quantity: 50,
+                                                        expiry: '2024-12-28'
+                                                    };
+                                                })
+                                            }}
                                             className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg text-sm font-medium hover:from-purple-700 hover:to-pink-700 transition"
                                         >
                                             <Zap className="w-4 h-4" />
