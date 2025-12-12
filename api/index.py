@@ -1,18 +1,10 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-import requests
-import random
+import yfinance as yf
 
 app = Flask(__name__)
 # Allow CORS for all domains
 CORS(app)
-
-# List of user agents to rotate
-USER_AGENTS = [
-    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36',
-    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36',
-    'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36'
-]
 
 @app.route('/api/stock', methods=['GET'])
 def get_stock():
@@ -21,57 +13,55 @@ def get_stock():
         return jsonify({'error': 'Symbol(s) required'}), 400
 
     try:
-        # Use Yahoo Finance Quote API (Batch support)
-        # https://query1.finance.yahoo.com/v7/finance/quote?symbols=AAPL,GOOG
-        url = f"https://query1.finance.yahoo.com/v7/finance/quote?symbols={symbols_param}"
+        # Use yfinance library for robust fetching
+        # yfinance handles cookies, crumbs, and user-agents automatically
+        tickers = yf.Tickers(symbols_param)
         
-        headers = {
-            'User-Agent': random.choice(USER_AGENTS),
-            'Accept': '*/*'
-        }
-
-        # Timeout increased slightly for batch
-        response = requests.get(url, headers=headers, timeout=8)
-        
-        # Failover to query2 if query1 fails
-        if response.status_code != 200:
-            url = f"https://query2.finance.yahoo.com/v7/finance/quote?symbols={symbols_param}"
-            response = requests.get(url, headers=headers, timeout=8)
-            
-        if response.status_code != 200:
-            return jsonify({'error': f'Upstream error: {response.status_code}'}), response.status_code
-
-        data = response.json()
-        results = data.get('quoteResponse', {}).get('result', [])
-        
-        if not results:
-             return jsonify({'error': 'No data found', 'raw': data}), 404
-
-        # Response list
         mapped_results = []
         
-        for item in results:
-             mapped_results.append({
-                'symbol': item.get('symbol'),
-                'currentPrice': item.get('regularMarketPrice'),
-                'previousClose': item.get('regularMarketPreviousClose'),
-                'open': item.get('regularMarketOpen'),
-                'dayHigh': item.get('regularMarketDayHigh'),
-                'dayLow': item.get('regularMarketDayLow'),
-                'volume': item.get('regularMarketVolume'),
-                'marketCap': item.get('marketCap'),
-                'shortName': item.get('shortName'),
-                'longName': item.get('longName'),
-                'currency': item.get('currency'),
-                'exchange': item.get('exchange'),
-                'change': item.get('regularMarketChange'),
-                'changePercent': item.get('regularMarketChangePercent')
-            })
+        # Iterate through the requested symbols
+        # tickers.tickers is a dict: {'AAPL': Ticker object, ...}
+        for symbol, ticker_obj in tickers.tickers.items():
+            try:
+                # fast_info is faster for real-time price but has less metadata
+                # info has everything but is slower. 
+                # Let's try info first for compatibility, or mix.
+                info = ticker_obj.info
+                
+                # If info is empty, it might be a bad symbol or failure
+                if not info:
+                    continue
+
+                # Map data
+                # specific handling for potentially missing keys
+                current_price = info.get('currentPrice') or info.get('regularMarketPrice') or info.get('ask') or 0
+                previous_close = info.get('previousClose') or info.get('regularMarketPreviousClose') or current_price
+                
+                change = current_price - previous_close
+                change_percent = (change / previous_close * 100) if previous_close else 0
+
+                mapped_results.append({
+                    'symbol': symbol, # correct symbol from iteration keys (might differ from input case)
+                    'currentPrice': current_price,
+                    'previousClose': previous_close,
+                    'open': info.get('open') or info.get('regularMarketOpen'),
+                    'dayHigh': info.get('dayHigh') or info.get('regularMarketDayHigh'),
+                    'dayLow': info.get('dayLow') or info.get('regularMarketDayLow'),
+                    'volume': info.get('volume') or info.get('regularMarketVolume'),
+                    'marketCap': info.get('marketCap'),
+                    'shortName': info.get('shortName'),
+                    'longName': info.get('longName'),
+                    'currency': info.get('currency'),
+                    'exchange': info.get('exchange'),
+                    'change': change,
+                    'changePercent': change_percent
+                })
+            except Exception as e:
+                print(f"Error fetching {symbol}: {e}")
+                continue
         
-        # If single symbol was requested but returned as list, structure it to match old API if needed?
-        # But better to just always return a list or let frontend handle it. 
-        # For compatibility with potential existing single-fetch calls, if mapped_results len is 1, maybe return object? 
-        # The frontend logic I'm writing will handle a list.
+        if not mapped_results:
+             return jsonify({'error': 'No data found for symbols'}), 404
         
         flask_res = jsonify({'results': mapped_results})
         # Cache for 10 seconds
