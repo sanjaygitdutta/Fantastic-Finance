@@ -1,10 +1,82 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import yfinance as yf
+import concurrent.futures
 
 app = Flask(__name__)
 # Allow CORS for all domains
 CORS(app)
+
+def fetch_symbol_data(symbol, ticker_object):
+    """
+    Helper function to fetch data for a single symbol.
+    Prioritizes .info for accuracy, falls back to fast_info for speed/resilience.
+    """
+    try:
+        # Try .info first for the official "Market Change" values
+        # This is slower but accurate. We rely on threading to make it fast enough.
+        info = ticker_object.info
+        if info:
+            current_price = info.get('currentPrice') or info.get('regularMarketPrice') or info.get('ask') or 0.0
+            previous_close = info.get('previousClose') or info.get('regularMarketPreviousClose') 
+            
+            # Use official change if available, else calculate
+            change = info.get('regularMarketChange')
+            change_percent = info.get('regularMarketChangePercent')
+            
+            # Fallback calculation if explicit keys missing
+            if (change is None or change_percent is None) and previous_close and current_price:
+                change = current_price - previous_close
+                if previous_close != 0:
+                    change_percent = (change / previous_close) * 100
+                else:
+                    change_percent = 0.0
+
+            # Normalize missing values
+            if change is None: change = 0.0
+            if change_percent is None: change_percent = 0.0
+            if previous_close is None: previous_close = current_price # Fallback
+
+            return {
+                'symbol': symbol,
+                'currentPrice': current_price,
+                'previousClose': previous_close,
+                'open': info.get('open') or info.get('regularMarketOpen'),
+                'dayHigh': info.get('dayHigh') or info.get('regularMarketDayHigh'),
+                'dayLow': info.get('dayLow') or info.get('regularMarketDayLow'),
+                'change': change,
+                'changePercent': change_percent
+            }
+    except Exception as e:
+        # print(f"Info fetch failed for {symbol}: {e}")
+        pass
+
+    # Fallback to fast_info if .info failed
+    try:
+        fast_info = ticker_object.fast_info
+        current_price = fast_info.last_price
+        previous_close = fast_info.previous_close
+        
+        if previous_close and previous_close > 0:
+            change = current_price - previous_close
+            change_percent = (change / previous_close * 100)
+        else:
+            change = 0.0
+            change_percent = 0.0
+
+        return {
+            'symbol': symbol,
+            'currentPrice': current_price,
+            'previousClose': previous_close,
+            'open': fast_info.open,
+            'dayHigh': fast_info.day_high,
+            'dayLow': fast_info.day_low,
+            'change': change,
+            'changePercent': change_percent
+        }
+    except Exception as e:
+        print(f"All fetch methods failed for {symbol}: {e}")
+        return None
 
 @app.route('/api/stock', methods=['GET'])
 def get_stock():
@@ -13,85 +85,33 @@ def get_stock():
         return jsonify({'error': 'Symbol(s) required'}), 400
 
     try:
-        # Use yfinance library for robust fetching
-        # Handle both comma and space separated
         clean_symbols = symbols_param.replace(',', ' ')
-        
         tickers = yf.Tickers(clean_symbols)
         
         mapped_results = []
         
-        # ... (processing) ...
-        
-        # Iterate through the requested symbols
-        for symbol, ticker_obj in tickers.tickers.items():
-            try:
-                # Initialize variables
-                current_price = 0.0
-                previous_close = 0.0
-                open_price = 0.0
-                day_high = 0.0
-                day_low = 0.0
-                
-                # 1. Try fast_info (Primary Source - Speed)
+        # Use ThreadPoolExecutor to fetch in parallel
+        # Max workers = number of symbols or a reasonable limit (e.g., 20)
+        # Limiting to 10 workers to avoid overwhelming the server/source
+        with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+            future_to_symbol = {
+                executor.submit(fetch_symbol_data, symbol, ticker): symbol 
+                for symbol, ticker in tickers.tickers.items()
+            }
+            
+            for future in concurrent.futures.as_completed(future_to_symbol):
+                symbol = future_to_symbol[future]
                 try:
-                    fast_info = ticker_obj.fast_info
-                    current_price = fast_info.last_price
-                    previous_close = fast_info.previous_close
-                    open_price = fast_info.open
-                    day_high = fast_info.day_high
-                    day_low = fast_info.day_low
-                except:
-                    pass
+                    data = future.result()
+                    if data:
+                        mapped_results.append(data)
+                except Exception as exc:
+                    print(f'{symbol} generated an exception: {exc}')
 
-                # 2. Fallback to .info (Secondary Source - Completeness)
-                # Only if critical data is missing (price or prev_close)
-                if not current_price or not previous_close:
-                    try:
-                        info = ticker_obj.info
-                        if not current_price:
-                            current_price = info.get('currentPrice') or info.get('regularMarketPrice') or info.get('ask') or 0
-                        if not previous_close:
-                            previous_close = info.get('previousClose') or info.get('regularMarketPreviousClose') or current_price
-                        
-                        # Fill gaps in others if needed
-                        if not open_price: open_price = info.get('open') or info.get('regularMarketOpen')
-                        if not day_high: day_high = info.get('dayHigh') or info.get('regularMarketDayHigh')
-                        if not day_low: day_low = info.get('dayLow') or info.get('regularMarketDayLow')
-                    except:
-                        pass
-                
-                # 3. Calculate Change (Safety Check)
-                if previous_close and previous_close > 0 and current_price:
-                    change = current_price - previous_close
-                    change_percent = (change / previous_close * 100)
-                else:
-                    change = 0.0
-                    change_percent = 0.0
-                
-                # If we still have 0 price, skip this symbol (invalid data)
-                if not current_price:
-                    continue
-
-                mapped_results.append({
-                    'symbol': symbol,
-                    'currentPrice': current_price,
-                    'previousClose': previous_close,
-                    'open': open_price,
-                    'dayHigh': day_high,
-                    'dayLow': day_low,
-                    'change': change,
-                    'changePercent': change_percent
-                })
-            except Exception as e:
-                print(f"Error processing {symbol}: {e}")
-                continue
-        
         if not mapped_results:
              return jsonify({'error': 'No data found for symbols'}), 404
         
         flask_res = jsonify({'results': mapped_results})
-        # Disable caching to force real-time usage
         flask_res.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
         return flask_res
 
