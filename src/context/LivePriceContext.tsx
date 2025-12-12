@@ -403,106 +403,91 @@ export function LivePriceProvider({ children }: { children: ReactNode }) {
             if (yfSymbolsToFetch.size === 0) return;
 
             // Make single batch request
-            const symbolsParam = Array.from(yfSymbolsToFetch).join(',');
-            const res = await fetch(`/api/stock?symbols=${encodeURIComponent(symbolsParam)}`);
 
-            if (!res.ok) {
-                console.warn(`Local API batch fetch failed: ${res.status}`);
-                // Only simulate if API is completely down
-                simulatePrices();
-                return;
-            }
+            results.forEach((item: any) => {
+                const yfSym = item.symbol;
+                const appSymbols = reverseMap[yfSym];
 
-            const data = await res.json();
-            const results = data.results || [];
+                if (appSymbols) {
+                    appSymbols.forEach(appSym => {
+                        // Yahoo data already has change/changePercent, or calculate it
+                        const price = item.currentPrice;
+                        const prevClose = item.previousClose || item.open || price;
+                        const change = item.change !== undefined ? item.change : (price - prevClose);
+                        const changePercent = item.changePercent !== undefined ? item.changePercent : ((change / prevClose) * 100);
 
-            if (results.length > 0) {
-                const updates: Record<string, PriceData> = {};
+                        updates[appSym] = {
+                            symbol: appSym,
+                            price: price,
+                            change: change,
+                            changePercent: changePercent
+                        };
+                    });
+                }
+            });
 
-                results.forEach((item: any) => {
-                    const yfSym = item.symbol;
-                    const appSymbols = reverseMap[yfSym];
-
-                    if (appSymbols) {
-                        appSymbols.forEach(appSym => {
-                            // Yahoo data already has change/changePercent, or calculate it
-                            const price = item.currentPrice;
-                            const prevClose = item.previousClose || item.open || price;
-                            const change = item.change !== undefined ? item.change : (price - prevClose);
-                            const changePercent = item.changePercent !== undefined ? item.changePercent : ((change / prevClose) * 100);
-
-                            updates[appSym] = {
-                                symbol: appSym,
-                                price: price,
-                                change: change,
-                                changePercent: changePercent
-                            };
-                        });
-                    }
-                });
-
-                setPrices(prev => ({
-                    ...prev,
-                    ...updates
-                }));
-                setUsingLiveApi(true); // Technically using "Live" data from Yahoo
-                setLastUpdated(new Date());
-            }
+            setPrices(prev => ({
+                ...prev,
+                ...updates
+            }));
+            setUsingLiveApi(true); // Technically using "Live" data from Yahoo
+            setLastUpdated(new Date());
+        }
 
         } catch (error) {
-            console.error("Local API fetch failed:", error);
-            simulatePrices();
+        console.error("Local API fetch failed:", error);
+        simulatePrices();
+    }
+}, [simulatePrices]);
+
+useEffect(() => {
+    // Only start token refresh scheduler if we have tokens
+    const tokens = authService.getStoredTokens();
+    if (tokens) {
+        authService.startTokenRefreshScheduler();
+    }
+
+    // Defer the initial connection significantly to not block page load at all
+    // Page loads with simulated data first, then connects to live feed
+    const timer = setTimeout(() => {
+        refreshPrices();
+    }, 5000); // 5 second delay
+
+    // Keep simulation running if not live (no user token or WS disconnected)
+    // Modified to use local API if available
+    const interval = setInterval(async () => {
+        const token = authService.getStoredTokens();
+        // Fallback to local API if no token OR if we have a token but WS isn't somehow connected
+        // Note: isConnected might take a moment to update, but polling every 5s is safe.
+        // We use a ref for isConnected to avoid stale closure if needed, but here we depend on isConnected from scope?
+        // Actually, useEffect dependency includes isConnected? No, it doesn't in the original code.
+        // Let's rely on the fact that if we aren't getting WS updates, we want local data.
+
+        // Simpler check: If not using Live API explicitly and not Connected to WS
+        if (!token || !wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
+            await fetchFromLocalApi();
         }
-    }, [simulatePrices]);
+    }, 5000); // Poll every 5 seconds
 
-    useEffect(() => {
-        // Only start token refresh scheduler if we have tokens
-        const tokens = authService.getStoredTokens();
-        if (tokens) {
-            authService.startTokenRefreshScheduler();
+    return () => {
+        clearTimeout(timer);
+        clearInterval(interval);
+        if (reconnectTimeoutRef.current) {
+            clearTimeout(reconnectTimeoutRef.current);
         }
+        if (wsRef.current) {
+            wsRef.current.close();
+        }
+        // Stop the token refresh scheduler
+        authService.stopTokenRefreshScheduler();
+    };
+}, [refreshPrices, simulatePrices, fetchFromLocalApi]);
 
-        // Defer the initial connection significantly to not block page load at all
-        // Page loads with simulated data first, then connects to live feed
-        const timer = setTimeout(() => {
-            refreshPrices();
-        }, 5000); // 5 second delay
-
-        // Keep simulation running if not live (no user token or WS disconnected)
-        // Modified to use local API if available
-        const interval = setInterval(async () => {
-            const token = authService.getStoredTokens();
-            // Fallback to local API if no token OR if we have a token but WS isn't somehow connected
-            // Note: isConnected might take a moment to update, but polling every 5s is safe.
-            // We use a ref for isConnected to avoid stale closure if needed, but here we depend on isConnected from scope?
-            // Actually, useEffect dependency includes isConnected? No, it doesn't in the original code.
-            // Let's rely on the fact that if we aren't getting WS updates, we want local data.
-
-            // Simpler check: If not using Live API explicitly and not Connected to WS
-            if (!token || !wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
-                await fetchFromLocalApi();
-            }
-        }, 5000); // Poll every 5 seconds
-
-        return () => {
-            clearTimeout(timer);
-            clearInterval(interval);
-            if (reconnectTimeoutRef.current) {
-                clearTimeout(reconnectTimeoutRef.current);
-            }
-            if (wsRef.current) {
-                wsRef.current.close();
-            }
-            // Stop the token refresh scheduler
-            authService.stopTokenRefreshScheduler();
-        };
-    }, [refreshPrices, simulatePrices, fetchFromLocalApi]);
-
-    return (
-        <LivePriceContext.Provider value={{ prices, isConnected, lastUpdated, refreshPrices, usingLiveApi }}>
-            {children}
-        </LivePriceContext.Provider>
-    );
+return (
+    <LivePriceContext.Provider value={{ prices, isConnected, lastUpdated, refreshPrices, usingLiveApi }}>
+        {children}
+    </LivePriceContext.Provider>
+);
 }
 
 export function useLivePrices() {

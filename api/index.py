@@ -14,58 +14,80 @@ def get_stock():
 
     try:
         # Use yfinance library for robust fetching
-        # yfinance handles cookies, crumbs, and user-agents automatically
-        tickers = yf.Tickers(symbols_param)
+        # Handle both comma and space separated
+        clean_symbols = symbols_param.replace(',', ' ')
+        
+        tickers = yf.Tickers(clean_symbols)
         
         mapped_results = []
         
+        # ... (processing) ...
+        
         # Iterate through the requested symbols
-        # tickers.tickers is a dict: {'AAPL': Ticker object, ...}
         for symbol, ticker_obj in tickers.tickers.items():
-            try:
-                # fast_info is faster for real-time price but has less metadata
-                # info has everything but is slower. 
-                # Let's try info first for compatibility, or mix.
-                info = ticker_obj.info
+             # ... (existing mapping logic) ...
+             try:
+                # Use fast_info for critical price data (much faster than .info)
+                # Fallback to .info if fast_info missing
+                fast_info = ticker_obj.fast_info
                 
-                # If info is empty, it might be a bad symbol or failure
-                if not info:
-                    continue
+                # Retrieve price from fast_info if possible
+                try:
+                    current_price = fast_info.last_price
+                    previous_close = fast_info.previous_close
+                    open_price = fast_info.open
+                    day_high = fast_info.day_high
+                    day_low = fast_info.day_low
+                except:
+                     # Fallback to .info
+                     info = ticker_obj.info
+                     current_price = info.get('currentPrice') or info.get('regularMarketPrice') or 0
+                     previous_close = info.get('previousClose') or info.get('regularMarketPreviousClose') or current_price
+                     open_price = info.get('open') or info.get('regularMarketOpen')
+                     day_high = info.get('dayHigh') or info.get('regularMarketDayHigh')
+                     day_low = info.get('dayLow') or info.get('regularMarketDayLow')
 
-                # Map data
-                # specific handling for potentially missing keys
-                current_price = info.get('currentPrice') or info.get('regularMarketPrice') or info.get('ask') or 0
-                previous_close = info.get('previousClose') or info.get('regularMarketPreviousClose') or current_price
-                
                 change = current_price - previous_close
                 change_percent = (change / previous_close * 100) if previous_close else 0
 
                 mapped_results.append({
-                    'symbol': symbol, # correct symbol from iteration keys (might differ from input case)
+                    'symbol': symbol,
                     'currentPrice': current_price,
                     'previousClose': previous_close,
-                    'open': info.get('open') or info.get('regularMarketOpen'),
-                    'dayHigh': info.get('dayHigh') or info.get('regularMarketDayHigh'),
-                    'dayLow': info.get('dayLow') or info.get('regularMarketDayLow'),
-                    'volume': info.get('volume') or info.get('regularMarketVolume'),
-                    'marketCap': info.get('marketCap'),
-                    'shortName': info.get('shortName'),
-                    'longName': info.get('longName'),
-                    'currency': info.get('currency'),
-                    'exchange': info.get('exchange'),
+                    'open': open_price,
+                    'dayHigh': day_high,
+                    'dayLow': day_low,
+                    # fast_info doesn't have volume/name easily, fetch from info if needed or skip for speed
+                    # For ticker, we mainly need Price + Change.
+                    # Let's keep using .info selectively or lazily if we need full data?
+                    # For now, let's stick to .info but wrap it carefully as it initiates network calls per attribute sometimes
                     'change': change,
                     'changePercent': change_percent
                 })
-            except Exception as e:
-                print(f"Error fetching {symbol}: {e}")
-                continue
-        
+             except Exception as e:
+                # If fast_info fails, try standard info path one last time completely
+                try:
+                    info = ticker_obj.info
+                    current_price = info.get('currentPrice') or info.get('regularMarketPrice') or 0
+                    previous_close = info.get('previousClose') or info.get('regularMarketPreviousClose') or current_price
+                    change = current_price - previous_close
+                    change_percent = (change / previous_close * 100) if previous_close else 0
+                    
+                    mapped_results.append({
+                        'symbol': symbol,
+                        'currentPrice': current_price,
+                        'change': change,
+                        'changePercent': change_percent
+                    })
+                except:
+                    continue
+
         if not mapped_results:
              return jsonify({'error': 'No data found for symbols'}), 404
         
         flask_res = jsonify({'results': mapped_results})
-        # Cache for 10 seconds
-        flask_res.headers['Cache-Control'] = 'public, max-age=10, s-maxage=10'
+        # Disable caching to force real-time usage
+        flask_res.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
         return flask_res
 
     except Exception as e:
