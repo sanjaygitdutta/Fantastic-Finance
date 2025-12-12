@@ -402,12 +402,18 @@ export function LivePriceProvider({ children }: { children: ReactNode }) {
             refreshPrices();
         }, 5000); // 5 second delay
 
-        // Keep simulation running if not live (no user token)
-        // Modified to use local API if available, else simulation
+        // Keep simulation running if not live (no user token or WS disconnected)
+        // Modified to use local API if available
         const interval = setInterval(async () => {
             const token = authService.getStoredTokens();
-            if (!token) {
-                // Try to fetch from local API first
+            // Fallback to local API if no token OR if we have a token but WS isn't somehow connected
+            // Note: isConnected might take a moment to update, but polling every 5s is safe.
+            // We use a ref for isConnected to avoid stale closure if needed, but here we depend on isConnected from scope?
+            // Actually, useEffect dependency includes isConnected? No, it doesn't in the original code.
+            // Let's rely on the fact that if we aren't getting WS updates, we want local data.
+
+            // Simpler check: If not using Live API explicitly and not Connected to WS
+            if (!token || !wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
                 await fetchFromLocalApi();
             }
         }, 5000); // Poll every 5 seconds
