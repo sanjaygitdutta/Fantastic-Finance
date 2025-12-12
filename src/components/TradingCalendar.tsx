@@ -15,11 +15,20 @@ interface CalendarEvent {
 export default function TradingCalendar() {
     const [selectedFilter, setSelectedFilter] = useState<'all' | 'expiry' | 'earnings' | 'economic'>('all');
 
-    // Mock calendar events
+    // Generate events dynamically based on current date
+    const today = new Date();
+
+    // Helper to get date string for X days from now
+    const getDate = (days: number) => {
+        const d = new Date(today);
+        d.setDate(d.getDate() + days);
+        return d.toISOString().split('T')[0];
+    };
+
     const events: CalendarEvent[] = [
         {
             id: '1',
-            date: '2024-12-05',
+            date: getDate(0), // Today
             title: 'NIFTY Weekly Expiry',
             type: 'expiry',
             importance: 'high',
@@ -28,7 +37,7 @@ export default function TradingCalendar() {
         },
         {
             id: '2',
-            date: '2024-12-05',
+            date: getDate(0),
             title: 'BANKNIFTY Weekly Expiry',
             type: 'expiry',
             importance: 'high',
@@ -37,7 +46,7 @@ export default function TradingCalendar() {
         },
         {
             id: '3',
-            date: '2024-12-06',
+            date: getDate(1), // Tomorrow
             title: 'RBI Monetary Policy Decision',
             type: 'economic',
             importance: 'high',
@@ -45,7 +54,7 @@ export default function TradingCalendar() {
         },
         {
             id: '4',
-            date: '2024-12-07',
+            date: getDate(2),
             title: 'RELIANCE Q3 Earnings',
             type: 'earnings',
             importance: 'high',
@@ -54,7 +63,7 @@ export default function TradingCalendar() {
         },
         {
             id: '5',
-            date: '2024-12-08',
+            date: getDate(3),
             title: 'US Non-Farm Payrolls',
             type: 'economic',
             importance: 'medium',
@@ -62,7 +71,7 @@ export default function TradingCalendar() {
         },
         {
             id: '6',
-            date: '2024-12-10',
+            date: getDate(5),
             title: 'TCS Dividend Ex-Date',
             type: 'dividend',
             importance: 'medium',
@@ -84,21 +93,21 @@ export default function TradingCalendar() {
 
     const getEventColor = (type: string) => {
         switch (type) {
-            case 'expiry': return { bg: 'bg-red-100 dark:bg-red-900/30', text: 'text-red-600 dark:text-red-400', border: 'border-red-300 dark:border-red-700' };
-            case 'earnings': return { bg: 'bg-blue-100 dark:bg-blue-900/30', text: 'text-blue-600 dark:text-blue-400', border: 'border-blue-300 dark:border-blue-700' };
-            case 'economic': return { bg: 'bg-purple-100 dark:bg-purple-900/30', text: 'text-purple-600 dark:text-purple-400', border: 'border-purple-300 dark:border-purple-700' };
-            case 'ipo': return { bg: 'bg-green-100 dark:bg-green-900/30', text: 'text-green-600 dark:text-green-400', border: 'border-green-300 dark:border-green-700' };
-            case 'dividend': return { bg: 'bg-orange-100 dark:bg-orange-900/30', text: 'text-orange-600 dark:text-orange-400', border: 'border-orange-300 dark:border-orange-700' };
-            default: return { bg: 'bg-gray-100', text: 'text-gray-600', border: 'border-gray-300' };
+            case 'expiry': return { bg: 'bg-red-50 dark:bg-red-900/10', text: 'text-red-600 dark:text-red-400', border: 'border-red-200 dark:border-red-800' };
+            case 'earnings': return { bg: 'bg-blue-50 dark:bg-blue-900/10', text: 'text-blue-600 dark:text-blue-400', border: 'border-blue-200 dark:border-blue-800' };
+            case 'economic': return { bg: 'bg-purple-50 dark:bg-purple-900/10', text: 'text-purple-600 dark:text-purple-400', border: 'border-purple-200 dark:border-purple-800' };
+            case 'ipo': return { bg: 'bg-green-50 dark:bg-green-900/10', text: 'text-green-600 dark:text-green-400', border: 'border-green-200 dark:border-green-800' };
+            case 'dividend': return { bg: 'bg-orange-50 dark:bg-orange-900/10', text: 'text-orange-600 dark:text-orange-400', border: 'border-orange-200 dark:border-orange-800' };
+            default: return { bg: 'bg-slate-50', text: 'text-slate-600', border: 'border-slate-200' };
         }
     };
 
     const getImportanceBadge = (importance: string) => {
         switch (importance) {
-            case 'high': return { bg: 'bg-red-500', text: 'HIGH' };
-            case 'medium': return { bg: 'bg-orange-500', text: 'MED' };
-            case 'low': return { bg: 'bg-gray-400', text: 'LOW' };
-            default: return { bg: 'bg-gray-400', text: 'N/A' };
+            case 'high': return { bg: 'bg-gradient-to-r from-red-500 to-red-600', text: 'HIGH' };
+            case 'medium': return { bg: 'bg-gradient-to-r from-orange-500 to-orange-600', text: 'MED' };
+            case 'low': return { bg: 'bg-slate-400', text: 'LOW' };
+            default: return { bg: 'bg-slate-400', text: 'N/A' };
         }
     };
 
@@ -139,32 +148,38 @@ export default function TradingCalendar() {
     ];
 
     return (
-        <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-200 dark:border-slate-700">
+        <div className="bg-white/80 backdrop-blur-xl dark:bg-slate-800/80 rounded-2xl p-6 shadow-xl border border-white/20 dark:border-slate-700/50">
             {/* Header */}
-            <div className="flex items-center gap-3 mb-6">
-                <div className="p-2 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-lg">
-                    <Calendar className="w-5 h-5 text-white" />
+            <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center gap-4">
+                    <div className="p-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl shadow-lg shadow-blue-500/20">
+                        <Calendar className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                        <h3 className="text-xl font-bold text-slate-900 dark:text-white">Trading Calendar</h3>
+                        <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">Upcoming market events</p>
+                    </div>
                 </div>
-                <div>
-                    <h3 className="text-lg font-bold text-slate-900 dark:text-white">Trading Calendar</h3>
-                    <p className="text-sm text-slate-500 dark:text-slate-400">Upcoming important dates</p>
+                <div className="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-bold rounded-full border border-green-200 dark:border-green-800">
+                    LIVE UPDATES
                 </div>
             </div>
 
             {/* Filters */}
-            <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
+            <div className="flex gap-2 mb-6 overflow-x-auto pb-2 scrollbar-hide">
                 {filters.map((filter) => (
                     <button
                         key={filter.id}
                         onClick={() => setSelectedFilter(filter.id as any)}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition ${selectedFilter === filter.id
-                            ? 'bg-blue-600 text-white shadow-md'
-                            : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
+                        className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-300 ${selectedFilter === filter.id
+                            ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/25 scale-105'
+                            : 'bg-slate-50 dark:bg-slate-700/50 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-600 hover:scale-105'
                             }`}
                     >
                         {filter.label} {filter.count > 0 && (
-                            <span className={`ml-1 ${selectedFilter === filter.id ? 'opacity-80' : 'opacity-60'}`}>
-                                ({filter.count})
+                            <span className={`ml-1.5 px-1.5 py-0.5 rounded-full text-[10px] ${selectedFilter === filter.id ? 'bg-white/20' : 'bg-slate-200 dark:bg-slate-600'
+                                }`}>
+                                {filter.count}
                             </span>
                         )}
                     </button>
@@ -172,19 +187,19 @@ export default function TradingCalendar() {
             </div>
 
             {/* Events List */}
-            <div className="space-y-4 max-h-96 overflow-y-auto">
+            <div className="space-y-6 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
                 {Object.entries(groupedEvents).map(([date, dayEvents]) => (
-                    <div key={date}>
+                    <div key={date} className="relative">
                         {/* Date Header */}
-                        <div className="sticky top-0 bg-white dark:bg-slate-800 pb-2 mb-2">
-                            <h4 className="font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-                                <Calendar className="w-4 h-4 text-blue-600" />
+                        <div className="sticky top-0 bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm pb-3 mb-2 z-10 border-b border-slate-100 dark:border-slate-700">
+                            <h4 className="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                                <div className="w-2 h-2 rounded-full bg-blue-500"></div>
                                 {formatDate(date)}
                             </h4>
                         </div>
 
                         {/* Events for this date */}
-                        <div className="space-y-2 ml-6">
+                        <div className="grid gap-3 ml-4 border-l-2 border-slate-100 dark:border-slate-700 pl-4 py-2">
                             {dayEvents.map((event) => {
                                 const Icon = getEventIcon(event.type);
                                 const color = getEventColor(event.type);
@@ -193,28 +208,32 @@ export default function TradingCalendar() {
                                 return (
                                     <div
                                         key={event.id}
-                                        className={`group relative p-3 rounded-lg ${color.bg} border ${color.border} hover:shadow-md transition`}
+                                        className={`group relative p-4 rounded-xl ${color.bg} border ${color.border} hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5`}
                                     >
-                                        <div className="flex items-start gap-3">
-                                            <Icon className={`w-4 h-4 ${color.text} flex-shrink-0 mt-0.5`} />
-                                            <div className="flex-1">
+                                        <div className="flex items-start gap-4">
+                                            <div className={`p-2 rounded-lg bg-white/50 dark:bg-black/10 ${color.text}`}>
+                                                <Icon className="w-5 h-5" />
+                                            </div>
+                                            <div className="flex-1 min-w-0">
                                                 <div className="flex items-start justify-between mb-1">
                                                     <div>
-                                                        <h5 className={`font-semibold text-sm ${color.text}`}>
+                                                        <h5 className={`font-bold text-sm text-slate-900 dark:text-white truncate pr-2`}>
                                                             {event.title}
                                                         </h5>
                                                         {event.symbol && (
-                                                            <span className="text-xs font-medium text-slate-600 dark:text-slate-400">
-                                                                {event.symbol}
-                                                            </span>
+                                                            <div className="flex items-center gap-2 mt-1">
+                                                                <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
+                                                                    {event.symbol}
+                                                                </span>
+                                                            </div>
                                                         )}
                                                     </div>
-                                                    <span className={`px-2 py-0.5 ${importance.bg} text-white text-[10px] font-bold rounded uppercase`}>
+                                                    <span className={`px-2 py-1 ${importance.bg} text-white text-[10px] font-bold rounded-md shadow-sm tracking-wider`}>
                                                         {importance.text}
                                                     </span>
                                                 </div>
                                                 {event.details && (
-                                                    <p className="text-xs text-slate-600 dark:text-slate-400">
+                                                    <p className="text-xs text-slate-600 dark:text-slate-400 mt-2 leading-relaxed">
                                                         {event.details}
                                                     </p>
                                                 )}
@@ -228,32 +247,10 @@ export default function TradingCalendar() {
                 ))}
             </div>
 
-            {/* Bottom Summary */}
-            <div className="mt-6 pt-6 border-t border-slate-200 dark:border-slate-700">
-                <div className="grid grid-cols-3 gap-4 text-center">
-                    <div>
-                        <div className="text-2xl font-bold text-red-600">
-                            {events.filter(e => e.type === 'expiry').length}
-                        </div>
-                        <div className="text-xs text-slate-500 dark:text-slate-400">Expiries</div>
-                    </div>
-                    <div>
-                        <div className="text-2xl font-bold text-blue-600">
-                            {events.filter(e => e.type === 'earnings').length}
-                        </div>
-                        <div className="text-xs text-slate-500 dark:text-slate-400">Earnings</div>
-                    </div>
-                    <div>
-                        <div className="text-2xl font-bold text-purple-600">
-                            {events.filter(e => e.type === 'economic').length}
-                        </div>
-                        <div className="text-xs text-slate-500 dark:text-slate-400">Economic</div>
-                    </div>
-                </div>
-            </div>
-
             {/* AdSense Display Ad */}
-            <DisplayAd adSlot="1234567904" className="mt-6" />
+            <div className="mt-6 pt-6 border-t border-slate-200 dark:border-slate-700">
+                <DisplayAd adSlot="1234567904" />
+            </div>
         </div>
     );
 }
