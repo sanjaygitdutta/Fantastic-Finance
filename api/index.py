@@ -1,18 +1,57 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-import requests
-import random
+import yfinance as yf
+import concurrent.futures
+import pandas as pd
 
 app = Flask(__name__)
 CORS(app)
 
-# Rotating user agents to avoid blocking
-USER_AGENTS = [
-    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-    'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0',
-    'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-]
+def fetch_symbol_history(symbol):
+    """
+    Fetch price data using history() which is robust for indices and crypto.
+    Returns dict with price, change, etc.
+    """
+    try:
+        ticker = yf.Ticker(symbol)
+        # Fetch 5 days to ensure we have at least 2 valid trading days (handle weekends/holidays)
+        hist = ticker.history(period="5d", interval="1d")
+        
+        if hist.empty or len(hist) < 1:
+            return None
+
+        # Last row is 'Current' (Live/Today)
+        current_row = hist.iloc[-1]
+        current_price = float(current_row['Close'])
+        
+        # Second to last is 'Previous Close'
+        if len(hist) >= 2:
+            prev_row = hist.iloc[-2]
+            previous_close = float(prev_row['Close'])
+        else:
+            # Fallback if only 1 day of data exists (e.g. new listing)
+            previous_close = float(current_row['Open']) # Use Open as proxy
+
+        # Calculate Change
+        change = current_price - previous_close
+        if previous_close != 0:
+            change_percent = (change / previous_close) * 100
+        else:
+            change_percent = 0.0
+
+        return {
+            'symbol': symbol,
+            'currentPrice': current_price,
+            'previousClose': previous_close,
+            'open': float(current_row['Open']),
+            'dayHigh': float(current_row['High']),
+            'dayLow': float(current_row['Low']),
+            'change': change,
+            'changePercent': change_percent
+        }
+    except Exception as e:
+        print(f"Error fetching {symbol}: {e}")
+        return None
 
 @app.route('/api/stock', methods=['GET'])
 def get_stock():
@@ -20,78 +59,29 @@ def get_stock():
     if not symbols_param:
         return jsonify({'error': 'Symbol(s) required'}), 400
 
-    # Handle comma or space separated
-    clean_symbols = symbols_param.replace(' ', ',')
+    # Handle comma/space
+    clean_symbols = symbols_param.replace(',', ' ').split()
     
-    url = f"https://query2.finance.yahoo.com/v7/finance/quote?symbols={clean_symbols}"
+    mapped_results = []
     
-    headers = {
-        'User-Agent': random.choice(USER_AGENTS),
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.5',
-        'Connection': 'keep-alive',
-        'Upgrade-Insecure-Requests': '1',
-        'Cache-Control': 'max-age=0'
-    }
-
-    try:
-        # Timeout is crucial for real-time endpoints
-        response = requests.get(url, headers=headers, timeout=5)
+    # Parallel Fetching
+    with concurrent.futures.ThreadPoolExecutor(max_workers=20) as executor:
+        future_to_symbol = {executor.submit(fetch_symbol_history, sym): sym for sym in clean_symbols}
         
-        if response.status_code != 200:
-            print(f"Yahoo API Error: {response.status_code}")
-            return jsonify({'error': 'Failed to fetch data from Yahoo'}), response.status_code
+        for future in concurrent.futures.as_completed(future_to_symbol):
+            try:
+                data = future.result()
+                if data:
+                    mapped_results.append(data)
+            except Exception as exc:
+                print(f"Exception for symbol: {exc}")
 
-        data = response.json()
-        quote_results = data.get('quoteResponse', {}).get('result', [])
-        
-        mapped_results = []
-        for item in quote_results:
-            # Trusted fields from the Quote API
-            # These are pre-calculated by Yahoo (e.g. Official Day Change)
-            price = item.get('regularMarketPrice', 0.0)
-            previous_close = item.get('regularMarketPreviousClose', 0.0)
-            
-            # Use official stats if available, else derive safely
-            change = item.get('regularMarketChange')
-            change_percent = item.get('regularMarketChangePercent')
-            
-            # Robust fallbacks for pre-market/post-market states if 'regular' is missing
-            if change is None or change_percent is None:
-                if previous_close and price:
-                    change = price - previous_close
-                    change_percent = (change / previous_close) * 100
-                else:
-                    change = 0.0
-                    change_percent = 0.0
+    if not mapped_results:
+         return jsonify({'error': 'No data found'}), 404
 
-            mapped_results.append({
-                'symbol': item.get('symbol'),
-                'currentPrice': price,
-                'previousClose': previous_close,
-                'open': item.get('regularMarketOpen'),
-                'dayHigh': item.get('regularMarketDayHigh'),
-                'dayLow': item.get('regularMarketDayLow'),
-                'change': change,
-                'changePercent': change_percent,
-                'shortName': item.get('shortName'),
-                'exchange': item.get('exchange')
-            })
-
-        if not mapped_results:
-             return jsonify({'error': 'No data found'}), 404
-
-        flask_res = jsonify({'results': mapped_results})
-        # IMPORTANT: Disable caching for real-time updates
-        flask_res.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
-        return flask_res
-
-    except requests.exceptions.RequestException as e:
-        print(f"Request failed: {e}")
-        return jsonify({'error': str(e)}), 500
-    except Exception as e:
-        print(f"API Error: {e}")
-        return jsonify({'error': str(e)}), 500
+    flask_res = jsonify({'results': mapped_results})
+    flask_res.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    return flask_res
 
 @app.route('/api/search', methods=['GET'])
 def search_stocks():
