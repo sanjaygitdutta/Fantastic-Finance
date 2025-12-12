@@ -477,6 +477,7 @@ export function LivePriceProvider({ children }: { children: ReactNode }) {
         }
     }, [simulatePrices]);
 
+    // Smart Polling Mechanism
     useEffect(() => {
         // Only start token refresh scheduler if we have tokens
         const tokens = authService.getStoredTokens();
@@ -484,35 +485,53 @@ export function LivePriceProvider({ children }: { children: ReactNode }) {
             authService.startTokenRefreshScheduler();
         }
 
-        // Defer the initial connection significantly to not block page load at all
-        // Page loads with simulated data first, then connects to live feed
-        const timer = setTimeout(() => {
-            refreshPrices();
-        }, 5000); // 5 second delay
+        let isMounted = true;
+        let pollTimeoutId: NodeJS.Timeout | null = null;
 
-        // Keep simulation running if not live (no user token or WS disconnected)
-        // Modified to use local API if available
-        const interval = setInterval(async () => {
+        const pollLoop = async () => {
+            if (!isMounted) return;
+
             const token = authService.getStoredTokens();
-            // Fallback to local API if no token OR if we have a token but WS isn't somehow connected
-            if (!token || !wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
-                await fetchFromLocalApi();
+            // If we have a live WS connection, we don't need to poll local API
+            if (token && wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+                // Check again in 5 seconds just in case WS drops
+                pollTimeoutId = setTimeout(pollLoop, 5000);
+                return;
             }
-        }, 3000); // Poll every 3 seconds for faster updates
+
+            // Fallback: Fetch from Local API (if no token OR if WS disconnected)
+            try {
+                await fetchFromLocalApi();
+            } catch (err) {
+                console.warn("Polling error:", err);
+            }
+
+            // Schedule next poll ONLY after current one finishes
+            // This prevents network congestion/stacking requests (The "Header Click Slow" Fix)
+            if (isMounted) {
+                pollTimeoutId = setTimeout(pollLoop, 4000); // 4s delay between requests
+            }
+        };
+
+        // Start the loop after a small initial delay to let the page load first
+        const initialTimer = setTimeout(() => {
+            refreshPrices(); // Initial fetch
+            pollLoop();      // Start polling
+        }, 3000);
 
         return () => {
-            clearTimeout(timer);
-            clearInterval(interval);
+            isMounted = false;
+            clearTimeout(initialTimer);
+            if (pollTimeoutId) clearTimeout(pollTimeoutId);
             if (reconnectTimeoutRef.current) {
                 clearTimeout(reconnectTimeoutRef.current);
             }
             if (wsRef.current) {
                 wsRef.current.close();
             }
-            // Stop the token refresh scheduler
             authService.stopTokenRefreshScheduler();
         };
-    }, [refreshPrices, simulatePrices, fetchFromLocalApi]);
+    }, [refreshPrices, fetchFromLocalApi]); // simulatePrices is stable
 
     return (
         <LivePriceContext.Provider value={{ prices, isConnected, lastUpdated, refreshPrices, usingLiveApi }}>
