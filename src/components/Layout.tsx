@@ -436,26 +436,11 @@ export default function Layout() {
 
 // Temporary Debug Component to verify deployment and API connection
 function DebugBanner() {
-    // try-catch to safely use hook or fallback if context missing
-    let status = { isConnected: false, usingLiveApi: false, lastUpdated: null };
-    try {
-        // eslint-disable-next-line react-hooks/rules-of-hooks
-        const ctx = require('./context/LivePriceContext').useLivePrices();
-        status = ctx;
-    } catch (e) {
-        // Context might be missing or code stale
-    }
-
-    // We can't easily import hook if Layout is outside provider without moving things.
-    // Instead, let's just make a hard-coded visual change "v2.0 SPA FIX" 
-    // If the user sees this bar, the DEPLOYMENT IS SUCCESSFUL.
-    // The data verification can be done by looking at market pulse.
-
     return (
-        <div className="fixed bottom-0 left-0 w-full bg-red-600 text-white text-xs font-bold p-1 z-50 text-center flex justify-center gap-4">
-            <span>DYNO-DEPLOY: v2.3 (SPA + API Fix)</span>
-            <span>Build Time: {new Date().toLocaleTimeString()}</span>
-            <span>Target: Self-Hosted API</span>
+        <div className="fixed bottom-0 left-0 w-full bg-red-600 text-white text-[10px] font-bold py-1 z-50 text-center flex justify-center gap-6 items-center shadow-lg safe-area-bottom">
+            <span className="bg-white/20 px-2 py-0.5 rounded">DEPLOYMENT: v2.5 (STATIC FIX)</span>
+            <span>If you see this, the code is updating.</span>
+            <span>Target API: /api/stock</span>
         </div>
     );
 }
