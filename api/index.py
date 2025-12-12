@@ -26,57 +26,67 @@ def get_stock():
         # Iterate through the requested symbols
         for symbol, ticker_obj in tickers.tickers.items():
              try:
-                # Use fast_info for critical price data (much faster than .info)
-                fast_info = ticker_obj.fast_info
+            try:
+                # Initialize variables
+                current_price = 0.0
+                previous_close = 0.0
+                open_price = 0.0
+                day_high = 0.0
+                day_low = 0.0
                 
-                # Retrieve price from fast_info
-                # fast_info attributes: last_price, previous_close, open, day_high, day_low, etc.
+                # 1. Try fast_info (Primary Source - Speed)
                 try:
+                    fast_info = ticker_obj.fast_info
                     current_price = fast_info.last_price
                     previous_close = fast_info.previous_close
-                    
-                    # If market is closed, last_price might be "yesterday's close" or "current pre-market"? 
-                    # fast_info usually gives the most relevant "last traded price"
-                    
-                    if previous_close:
-                        change = current_price - previous_close
-                        change_percent = (change / previous_close * 100)
-                    else:
-                        change = 0
-                        change_percent = 0
-                    
-                    mapped_results.append({
-                        'symbol': symbol,
-                        'currentPrice': current_price,
-                        'previousClose': previous_close,
-                        'open': fast_info.open,
-                        'dayHigh': fast_info.day_high,
-                        'dayLow': fast_info.day_low,
-                        # Skip 'volume', 'marketCap', 'longName' to avoid slow .info calls
-                        # The frontend mostly needs Price + Change% for the ticker.
-                        'change': change,
-                        'changePercent': change_percent
-                    })
-                except Exception as inner_e:
-                     print(f"Fast info error for {symbol}: {inner_e}")
-                     # Fallback to simple history fetch (1 day) if fast_info fails? 
-                     # Or just skip. .info is too slow for 20+ symbols in a loop.
-                     continue
+                    open_price = fast_info.open
+                    day_high = fast_info.day_high
+                    day_low = fast_info.day_low
+                except:
+                    pass
 
-             except Exception as e:
-                print(f"Error fetching {symbol}: {e}")
+                # 2. Fallback to .info (Secondary Source - Completeness)
+                # Only if critical data is missing (price or prev_close)
+                if not current_price or not previous_close:
+                    try:
+                        info = ticker_obj.info
+                        if not current_price:
+                            current_price = info.get('currentPrice') or info.get('regularMarketPrice') or info.get('ask') or 0
+                        if not previous_close:
+                            previous_close = info.get('previousClose') or info.get('regularMarketPreviousClose') or current_price
+                        
+                        # Fill gaps in others if needed
+                        if not open_price: open_price = info.get('open') or info.get('regularMarketOpen')
+                        if not day_high: day_high = info.get('dayHigh') or info.get('regularMarketDayHigh')
+                        if not day_low: day_low = info.get('dayLow') or info.get('regularMarketDayLow')
+                    except:
+                        pass
+                
+                # 3. Calculate Change (Safety Check)
+                if previous_close and previous_close > 0 and current_price:
+                    change = current_price - previous_close
+                    change_percent = (change / previous_close * 100)
+                else:
+                    change = 0.0
+                    change_percent = 0.0
+                
+                # If we still have 0 price, skip this symbol (invalid data)
+                if not current_price:
+                    continue
+
+                mapped_results.append({
+                    'symbol': symbol,
+                    'currentPrice': current_price,
+                    'previousClose': previous_close,
+                    'open': open_price,
+                    'dayHigh': day_high,
+                    'dayLow': day_low,
+                    'change': change,
+                    'changePercent': change_percent
+                })
+            except Exception as e:
+                print(f"Error processing {symbol}: {e}")
                 continue
-        
-        if not mapped_results:
-             return jsonify({'error': 'No data found for symbols'}), 404
-        
-        flask_res = jsonify({'results': mapped_results})
-        # Disable caching to force real-time usage
-        flask_res.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
-        return flask_res
-
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/search', methods=['GET'])
 def search_stocks():
