@@ -427,20 +427,6 @@ export default function Layout() {
             <AIAssistant />
             <FloatingActions />
             <DonationModal isOpen={donationModalOpen} onClose={() => setDonationModalOpen(false)} />
-
-            {/* DEBUG BANNER: Remove after verification */}
-            <DebugBanner />
-        </div>
-    );
-}
-
-// Temporary Debug Component to verify deployment and API connection
-function DebugBanner() {
-    return (
-        <div className="fixed top-0 left-0 w-full bg-red-600/90 backdrop-blur-sm text-white text-[10px] font-bold py-2 z-[9999] text-center flex justify-center gap-6 items-center shadow-2xl border-b border-white/20">
-            <span className="bg-white/20 px-2 py-0.5 rounded animate-pulse">DEPLOYMENT: v2.6 (TOP BANNER)</span>
-            <span>If you see this, the code is updating.</span>
-            <span>Target API: /api/stock</span>
         </div>
     );
 }
