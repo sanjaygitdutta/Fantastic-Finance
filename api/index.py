@@ -95,6 +95,9 @@ def get_stock():
         flask_res.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
         return flask_res
 
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/api/search', methods=['GET'])
 def search_stocks():
      return jsonify({'message': 'Search functionality not implemented'})
