@@ -419,7 +419,6 @@ export function LivePriceProvider({ children }: { children: ReactNode }) {
 
                 if (!res.ok) {
                     console.warn(`Local API batch fetch failed: ${res.status}`);
-                    simulatePrices();
                     return;
                 }
 
@@ -471,12 +470,10 @@ export function LivePriceProvider({ children }: { children: ReactNode }) {
                 } else {
                     console.error("Local API network error:", fetchError);
                 }
-                simulatePrices();
             }
 
         } catch (error) {
             console.error("Local API logic error:", error);
-            simulatePrices();
         }
     }, [simulatePrices]);
 
