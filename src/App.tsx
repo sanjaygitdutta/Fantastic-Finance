@@ -75,6 +75,7 @@ const Review = lazy(() => import('./components/Review'));
 const Brokers = lazy(() => import('./pages/Brokers'));
 const StrategyRecommendations = lazy(() => import('./components/StrategyRecommendations'));
 const AIAssistant = lazy(() => import('./components/AIAssistant'));
+const HeaderDemo = lazy(() => import('./pages/HeaderDemo'));
 import AdminProtectedRoute from './components/AdminProtectedRoute';
 
 // Loading Fallback Component
@@ -138,6 +139,12 @@ function App() {
                 </>
               } />
               <Route path="news" element={<NewsRoom />} />
+              <Route path="header-demo" element={
+                <>
+                  <SEO title="Header Concepts" />
+                  <HeaderDemo />
+                </>
+              } />
               <Route path="analytics" element={
                 <>
                   <SEO
