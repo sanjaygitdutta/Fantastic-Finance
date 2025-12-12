@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, ReactNode, useCallback, useRef } from 'react';
 import { authService } from '../services/authService';
+import { getBatchQuotes, TWELVE_DATA_MAPPING } from '../services/twelveDataService';
 
 type PriceData = {
     symbol: string;
@@ -347,9 +348,16 @@ export function LivePriceProvider({ children }: { children: ReactNode }) {
     }, [connectWebSocket]);
 
     const simulatePrices = useCallback(() => {
+        const hasTwelveDataKey = !!import.meta.env.VITE_TWELVE_DATA_API_KEY;
+
         setPrices(prev => {
             const next = { ...prev };
             Object.keys(next).forEach(symbol => {
+                // Skip simulation for symbols managed by Twelve Data if key is present
+                if (hasTwelveDataKey && TWELVE_DATA_MAPPING[symbol]) {
+                    return;
+                }
+
                 const currentPrice = next[symbol].price;
                 const volatility = symbol === 'BTC' || symbol === 'ETH' ? 0.005 : 0.002;
                 const changePercent = (Math.random() * volatility * 2) - volatility;
@@ -506,10 +514,43 @@ export function LivePriceProvider({ children }: { children: ReactNode }) {
                 console.warn("Polling error:", err);
             }
 
+            // Fetch from Twelve Data (Global Indices & Crypto)
+            try {
+                const twelveDataSymbols = Object.keys(TWELVE_DATA_MAPPING).filter(sym => SYMBOL_MAP[sym]);
+                // We map App Symbol -> Twelve Data Symbol using TWELVE_DATA_MAPPING
+                // But we need to pass Twelve Data Symbols to the service
+                const tdSymbols = twelveDataSymbols.map(sym => TWELVE_DATA_MAPPING[sym]);
+
+                if (tdSymbols.length > 0) {
+                    const tdQuotes = await getBatchQuotes(tdSymbols);
+                    const updates: Record<string, PriceData> = {};
+
+                    Object.entries(tdQuotes).forEach(([tdSym, quote]) => {
+                        // Reverse lookup: Find App Symbol for this TD Symbol
+                        const appSym = twelveDataSymbols.find(s => TWELVE_DATA_MAPPING[s] === tdSym);
+                        if (appSym) {
+                            updates[appSym] = {
+                                symbol: appSym,
+                                price: quote.price,
+                                change: quote.change,
+                                changePercent: quote.changePercent
+                            };
+                        }
+                    });
+
+                    if (Object.keys(updates).length > 0) {
+                        setPrices(prev => ({ ...prev, ...updates }));
+                        setLastUpdated(new Date());
+                    }
+                }
+            } catch (err) {
+                console.warn("Twelve Data polling error:", err);
+            }
+
             // Schedule next poll ONLY after current one finishes
             // This prevents network congestion/stacking requests (The "Header Click Slow" Fix)
             if (isMounted) {
-                pollTimeoutId = setTimeout(pollLoop, 4000); // 4s delay between requests
+                pollTimeoutId = setTimeout(pollLoop, 10000); // 10s delay (respecting Twelve Data limits)
             }
         };
 

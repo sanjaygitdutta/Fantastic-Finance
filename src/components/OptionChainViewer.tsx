@@ -51,8 +51,8 @@ export default function OptionChainViewer() {
     const [strikeRange, setStrikeRange] = useState<'all' | '100' | '200' | '300' | '400' | '500'>('500');
     const [maxPain, setMaxPain] = useState(0);
     const [maxPainData, setMaxPainData] = useState<{ strike: number; pain: number }[]>([]);
-    const [pcr, setPcr] = useState({ byOI: 0, byVolume: 0, signal: 'neutral' as const, interpretation: '' });
-    const [ivPercentile, setIvPercentile] = useState(42);
+    const [pcr, setPcr] = useState({ pcrByOI: 0, pcrByVolume: 0, signal: 'neutral', interpretation: '' });
+    const [ivPercentile] = useState(42);
 
     const { portfolio, getPortfolioGreeks, executeTrade } = usePaperTrading();
     const portfolioGreeks = getPortfolioGreeks();
@@ -217,7 +217,7 @@ export default function OptionChainViewer() {
                     <div className={`p-4 rounded-xl ${pcr.signal === 'bullish' ? 'bg-green-50 dark:bg-green-900/20' : pcr.signal === 'bearish' ? 'bg-red-50 dark:bg-red-900/20' : 'bg-slate-50 dark:bg-slate-700'}`}>
                         <div className="text-sm text-slate-600 dark:text-slate-400 mb-1">PCR (OI)</div>
                         <div className={`text-2xl font-bold ${pcr.signal === 'bullish' ? 'text-green-700 dark:text-green-300' : pcr.signal === 'bearish' ? 'text-red-700 dark:text-red-300' : 'text-slate-700 dark:text-slate-300'}`}>
-                            {pcr.byOI.toFixed(2)}
+                            {pcr.pcrByOI.toFixed(2)}
                         </div>
                         <div className="text-xs mt-1">{pcr.interpretation}</div>
                     </div>
@@ -310,108 +310,32 @@ export default function OptionChainViewer() {
                         </tr>
                     </thead>
                     <tbody>
-                        {filteredData.map((data, idx) => {
-                            const isMaxPain = data.strike === maxPain;
-                            const hasCallBuildup = data.call.oiChange > data.call.oi * 0.1;
-                            const hasPutBuildup = data.put.oiChange > data.put.oi * 0.1;
-
-                            // Calculate max OI change for visualization scaling
+                        {(() => {
                             const maxOIChange = Math.max(...filteredData.map(d => Math.max(Math.abs(d.call.oiChange), Math.abs(d.put.oiChange))));
-                            const callOIChangePercent = Math.abs(data.call.oiChange) / maxOIChange * 100;
-                            const putOIChangePercent = Math.abs(data.put.oiChange) / maxOIChange * 100;
-
-                            // Find active positions for this strike
-                            const callPosition = portfolio.holdings.find(h =>
-                                h.symbol === symbol &&
-                                h.strikePrice === data.strike &&
-                                h.optionType === 'CALL'
-                            );
-
-                            const putPosition = portfolio.holdings.find(h =>
-                                h.symbol === symbol &&
-                                h.strikePrice === data.strike &&
-                                h.optionType === 'PUT'
-                            );
-
-                            return (
-                                <tr key={idx} className={`border-t border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition ${isMaxPain ? 'ring-2 ring-purple-500' : ''}`}>
-                                    <td className={`px-2 py-2 ${getMoneynessColor(data.moneyness)}`}>
-                                        <div className="flex items-center gap-1">
-                                            {(data.call.oi / 1000).toFixed(0)}K
-                                            {hasCallBuildup && <span className="inline-flex items-center px-1 py-0.5 rounded text-xs bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" title="Long Call Buildup - Bullish">🟢</span>}
-                                        </div>
-                                    </td>
-                                    <td className={`px-2 py-2 relative ${getOIChangeColor(data.call.oiChange)}`}>
-                                        <div
-                                            className={`absolute inset-y-1 left-0 opacity-20 ${data.call.oiChange > 0 ? 'bg-green-500' : 'bg-red-500'}`}
-                                            style={{ width: `${callOIChangePercent}%` }}
-                                        ></div>
-                                        <span className="relative z-10">{data.call.oiChange > 0 ? '+' : ''}{(data.call.oiChange / 1000).toFixed(0)}K</span>
-                                    </td>
-                                    <td className="px-2 py-2">{(data.call.volume / 1000).toFixed(0)}K</td>
-                                    <td className="px-2 py-2">{formatNumber(data.call.iv * 100, 1)}%</td>
-                                    <td className={`px-2 py-2 font-semibold relative ${callPosition ? 'bg-blue-50 dark:bg-blue-900/20' : ''}`}>
-                                        ₹{formatNumber(data.call.ltp)}
-                                        {callPosition && (
-                                            <div className="absolute top-0 left-0 -ml-1 z-10">
-                                                <PositionsBadge
-                                                    quantity={callPosition.quantity}
-                                                    pnl={callPosition.pnl}
-                                                    type={callPosition.quantity > 0 ? 'BUY' : 'SELL'}
-                                                    onClose={() => executeTrade(callPosition.symbol, callPosition.quantity > 0 ? 'SELL' : 'BUY', Math.abs(callPosition.quantity), data.call.ltp)}
-                                                />
-                                            </div>
-                                        )}
-                                    </td>
-                                    <td className="px-2 py-2 text-xs">{formatNumber(data.call.delta, 3)}</td>
-                                    <td className="px-2 py-2 text-xs text-red-600">₹{formatNumber(data.call.theta)}</td>
-                                    <td className={`px-3 py-2 text-center font-bold ${getMoneynessColor(data.moneyness)} bg-slate-100 dark:bg-slate-700`}>
-                                        {data.strike}
-                                        {isMaxPain && <span className="ml-1 text-purple-600">★</span>}
-                                    </td>
-                                    <td className="px-2 py-2 text-xs text-red-600 text-right">₹{formatNumber(data.put.theta)}</td>
-                                    <td className="px-2 py-2 text-xs text-right">{formatNumber(data.put.delta, 3)}</td>
-                                    <td className={`px-2 py-2 font-semibold text-right relative ${putPosition ? 'bg-blue-50 dark:bg-blue-900/20' : ''}`}>
-                                        ₹{formatNumber(data.put.ltp)}
-                                        {putPosition && (
-                                            <div className="absolute top-0 right-0 -mr-1 z-10">
-                                                <PositionsBadge
-                                                    quantity={putPosition.quantity}
-                                                    pnl={putPosition.pnl}
-                                                    type={putPosition.quantity > 0 ? 'BUY' : 'SELL'}
-                                                    onClose={() => executeTrade(putPosition.symbol, putPosition.quantity > 0 ? 'SELL' : 'BUY', Math.abs(putPosition.quantity), data.put.ltp)}
-                                                />
-                                            </div>
-                                        )}
-                                    </td>
-                                    <td className="px-2 py-2 text-right">{formatNumber(data.put.iv * 100, 1)}%</td>
-                                    <td className="px-2 py-2 text-right">{(data.put.volume / 1000).toFixed(0)}K</td>
-                                    <td className={`px-2 py-2 text-right relative ${getOIChangeColor(data.put.oiChange)}`}>
-                                        <div
-                                            className={`absolute inset-y-1 right-0 opacity-20 ${data.put.oiChange > 0 ? 'bg-green-500' : 'bg-red-500'}`}
-                                            style={{ width: `${putOIChangePercent}%` }}
-                                        ></div>
-                                        <span className="relative z-10">{data.put.oiChange > 0 ? '+' : ''}{(data.put.oiChange / 1000).toFixed(0)}K</span>
-                                    </td>
-                                    <td className={`px-2 py-2 text-right ${getMoneynessColor(data.moneyness)}`}>
-                                        <div className="flex items-center justify-end gap-1">
-                                            {hasPutBuildup && <span className="inline-flex items-center px-1 py-0.5 rounded text-xs bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400" title="Long Put Buildup - Bearish">🔴</span>}
-                                            {(data.put.oi / 1000).toFixed(0)}K
-                                        </div>
-                                    </td>
-                                </tr>
-                            );
-                        })}
+                            return filteredData.map((data, idx) => (
+                                <OptionChainRow
+                                    key={idx}
+                                    data={data}
+                                    isMaxPain={data.strike === maxPain}
+                                    maxOIChange={maxOIChange}
+                                    portfolio={portfolio}
+                                    symbol={symbol}
+                                    executeTrade={executeTrade}
+                                    formatNumber={formatNumber}
+                                    getMoneynessColor={getMoneynessColor}
+                                    getOIChangeColor={getOIChangeColor}
+                                />
+                            ));
+                        })()}
                     </tbody>
-                </table >
-            </div >
+                </table>
+            </div>
             {loading && (
                 <div className="flex items-center justify-center py-8">
                     <RefreshCw className="w-6 h-6 animate-spin text-blue-600" />
                     <span className="ml-2 text-slate-600 dark:text-slate-400">Loading option chain...</span>
                 </div>
-            )
-            }
+            )}
             {
                 !loading && filteredData.length === 0 && (
                     <div className="text-center py-8 text-slate-500">No option chain data available</div>
@@ -423,3 +347,112 @@ export default function OptionChainViewer() {
         </div>
     );
 }
+
+const OptionChainRow = ({
+    data,
+    isMaxPain,
+    maxOIChange,
+    portfolio,
+    symbol,
+    executeTrade,
+    formatNumber,
+    getMoneynessColor,
+    getOIChangeColor
+}: {
+    data: OptionData,
+    isMaxPain: boolean,
+    maxOIChange: number,
+    portfolio: any,
+    symbol: string,
+    executeTrade: any,
+    formatNumber: (num: number, decimals?: number) => string,
+    getMoneynessColor: (moneyness: string) => string,
+    getOIChangeColor: (change: number) => string
+}) => {
+    const hasCallBuildup = data.call.oiChange > data.call.oi * 0.1;
+    const hasPutBuildup = data.put.oiChange > data.put.oi * 0.1;
+
+    const callOIChangePercent = maxOIChange > 0 ? Math.abs(data.call.oiChange) / maxOIChange * 100 : 0;
+    const putOIChangePercent = maxOIChange > 0 ? Math.abs(data.put.oiChange) / maxOIChange * 100 : 0;
+
+    const callPosition = portfolio.holdings.find((h: any) =>
+        h.symbol === symbol &&
+        h.strikePrice === data.strike &&
+        h.optionType === 'CALL'
+    );
+
+    const putPosition = portfolio.holdings.find((h: any) =>
+        h.symbol === symbol &&
+        h.strikePrice === data.strike &&
+        h.optionType === 'PUT'
+    );
+
+    return (
+        <tr className={`border-t border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition ${isMaxPain ? 'ring-2 ring-purple-500' : ''}`}>
+            <td className={`px-2 py-2 ${getMoneynessColor(data.moneyness)}`}>
+                <div className="flex items-center gap-1">
+                    {(data.call.oi / 1000).toFixed(0)}K
+                    {hasCallBuildup && <span className="inline-flex items-center px-1 py-0.5 rounded text-xs bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" title="Long Call Buildup - Bullish">🟢</span>}
+                </div>
+            </td>
+            <td className={`px-2 py-2 relative ${getOIChangeColor(data.call.oiChange)}`}>
+                <div
+                    className={`absolute inset-y-1 left-0 opacity-20 ${data.call.oiChange > 0 ? 'bg-green-500' : 'bg-red-500'}`}
+                    style={{ width: `${callOIChangePercent}%` }}
+                ></div>
+                <span className="relative z-10">{data.call.oiChange > 0 ? '+' : ''}{(data.call.oiChange / 1000).toFixed(0)}K</span>
+            </td>
+            <td className="px-2 py-2">{(data.call.volume / 1000).toFixed(0)}K</td>
+            <td className="px-2 py-2">{formatNumber(data.call.iv * 100, 1)}%</td>
+            <td className={`px-2 py-2 font-semibold relative ${callPosition ? 'bg-blue-50 dark:bg-blue-900/20' : ''}`}>
+                ₹{formatNumber(data.call.ltp)}
+                {callPosition && (
+                    <div className="absolute top-0 left-0 -ml-1 z-10">
+                        <PositionsBadge
+                            quantity={callPosition.quantity}
+                            pnl={callPosition.pnl}
+                            type={callPosition.quantity > 0 ? 'BUY' : 'SELL'}
+                            onClose={() => executeTrade(callPosition.symbol, callPosition.quantity > 0 ? 'SELL' : 'BUY', Math.abs(callPosition.quantity), data.call.ltp)}
+                        />
+                    </div>
+                )}
+            </td>
+            <td className="px-2 py-2 text-xs">{formatNumber(data.call.delta, 3)}</td>
+            <td className="px-2 py-2 text-xs text-red-600">₹{formatNumber(data.call.theta)}</td>
+            <td className={`px-3 py-2 text-center font-bold ${getMoneynessColor(data.moneyness)} bg-slate-100 dark:bg-slate-700`}>
+                {data.strike}
+                {isMaxPain && <span className="ml-1 text-purple-600">★</span>}
+            </td>
+            <td className="px-2 py-2 text-xs text-red-600 text-right">₹{formatNumber(data.put.theta)}</td>
+            <td className="px-2 py-2 text-xs text-right">{formatNumber(data.put.delta, 3)}</td>
+            <td className={`px-2 py-2 font-semibold text-right relative ${putPosition ? 'bg-blue-50 dark:bg-blue-900/20' : ''}`}>
+                ₹{formatNumber(data.put.ltp)}
+                {putPosition && (
+                    <div className="absolute top-0 right-0 -mr-1 z-10">
+                        <PositionsBadge
+                            quantity={putPosition.quantity}
+                            pnl={putPosition.pnl}
+                            type={putPosition.quantity > 0 ? 'BUY' : 'SELL'}
+                            onClose={() => executeTrade(putPosition.symbol, putPosition.quantity > 0 ? 'SELL' : 'BUY', Math.abs(putPosition.quantity), data.put.ltp)}
+                        />
+                    </div>
+                )}
+            </td>
+            <td className="px-2 py-2 text-right">{formatNumber(data.put.iv * 100, 1)}%</td>
+            <td className="px-2 py-2 text-right">{(data.put.volume / 1000).toFixed(0)}K</td>
+            <td className={`px-2 py-2 text-right relative ${getOIChangeColor(data.put.oiChange)}`}>
+                <div
+                    className={`absolute inset-y-1 right-0 opacity-20 ${data.put.oiChange > 0 ? 'bg-green-500' : 'bg-red-500'}`}
+                    style={{ width: `${putOIChangePercent}%` }}
+                ></div>
+                <span className="relative z-10">{data.put.oiChange > 0 ? '+' : ''}{(data.put.oiChange / 1000).toFixed(0)}K</span>
+            </td>
+            <td className={`px-2 py-2 text-right ${getMoneynessColor(data.moneyness)}`}>
+                <div className="flex items-center justify-end gap-1">
+                    {hasPutBuildup && <span className="inline-flex items-center px-1 py-0.5 rounded text-xs bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400" title="Long Put Buildup - Bearish">🔴</span>}
+                    {(data.put.oi / 1000).toFixed(0)}K
+                </div>
+            </td>
+        </tr>
+    );
+};

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Plus, Trash2, Play, TrendingUp, Activity, Target, BarChart3, Zap, BookOpen } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 
@@ -368,12 +368,12 @@ export default function StrategyBuilder() {
         logEvent('feature_used', { feature: 'Backtest' });
     };
 
-    const payoffData = legs.length > 0 ? generatePayoffData() : [];
-    const greeks = legs.length > 0 ? calculateGreeks() : null;
-    const metrics = legs.length > 0 ? calculateStrategyMetrics() : null;
-    const netPremium = legs.reduce((sum, leg) => {
+    const payoffData = useMemo(() => legs.length > 0 ? generatePayoffData() : [], [legs, spotPrice]);
+    const greeks = useMemo(() => legs.length > 0 ? calculateGreeks() : null, [legs]);
+    const metrics = useMemo(() => legs.length > 0 ? calculateStrategyMetrics() : null, [legs, payoffData]);
+    const netPremium = useMemo(() => legs.reduce((sum, leg) => {
         return sum + (leg.action === 'BUY' ? -leg.premium : leg.premium) * leg.quantity;
-    }, 0);
+    }, 0), [legs]);
 
     return (
         <div className="space-y-6">

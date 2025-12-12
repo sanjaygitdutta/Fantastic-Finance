@@ -6,6 +6,7 @@ import { useLivePrices } from '../context/LivePriceContext';
 // Market Ticker Widget
 import LiveMarketTicker from './LiveMarketTicker';
 import LiveIndicesWidget from './LiveIndicesWidget';
+import LiveGlobalIndicesWidget from './LiveGlobalIndicesWidget';
 
 
 // World Indices Widget
@@ -404,7 +405,8 @@ export default memo(function MarketData() {
                 </div>
                 <div className="p-4 grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <div className="lg:col-span-2">
-                        <WorldIndicesWidget />
+                        {/* <WorldIndicesWidget /> */}
+                        <LiveGlobalIndicesWidget />
                     </div>
                     <div className="lg:col-span-1">
                         <GiftNiftySimulation />
