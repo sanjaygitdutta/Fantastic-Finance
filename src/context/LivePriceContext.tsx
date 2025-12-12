@@ -29,6 +29,19 @@ const SYMBOL_MAP: Record<string, string> = {
     'BANKNIFTY': 'NSE_INDEX|Nifty Bank',
 };
 
+// YFinance Symbol Mapping
+const YFINANCE_MAP: Record<string, string> = {
+    'RELIANCE': 'RELIANCE.NS',
+    'TATASTEEL': 'TATASTEEL.NS',
+    'INFY': 'INFY.NS',
+    'HDFCBANK': 'HDFCBANK.NS',
+    'ITC': 'ITC.NS',
+    'NIFTY 50': '^NSEI',
+    'BANKNIFTY': '^NSEBANK',
+    'BTC': 'BTC-USD',
+    'ETH': 'ETH-USD',
+};
+
 // Reverse map for easy lookup during updates
 const REVERSE_SYMBOL_MAP: Record<string, string> = {};
 Object.entries(SYMBOL_MAP).forEach(([symbol, key]) => {
@@ -326,6 +339,56 @@ export function LivePriceProvider({ children }: { children: ReactNode }) {
         }
     }, [connectWebSocket, simulatePrices]);
 
+    // Function to fetch from our local Python API
+    const fetchFromLocalApi = useCallback(async () => {
+        try {
+            const symbols = Object.keys(INITIAL_PRICES);
+            const updates: Record<string, PriceData> = {};
+            let hasUpdates = false;
+
+            // Fetch concurrently for better performance
+            await Promise.all(symbols.map(async (symbol) => {
+                const yfSymbol = YFINANCE_MAP[symbol];
+                if (!yfSymbol) return;
+
+                try {
+                    const res = await fetch(`/api/stock?symbol=${yfSymbol}`);
+                    if (res.ok) {
+                        const data = await res.json();
+                        // Check if we got valid price data
+                        if (data.currentPrice) {
+                            updates[symbol] = {
+                                symbol: symbol,
+                                price: data.currentPrice,
+                                change: data.currentPrice - (data.previousClose || data.open || data.currentPrice),
+                                changePercent: data.previousClose ? ((data.currentPrice - data.previousClose) / data.previousClose * 100) : 0
+                            };
+                            hasUpdates = true;
+                        }
+                    }
+                } catch (e) {
+                    // Fail silently for individual stock fetch errors
+                    console.warn(`Failed to fetch ${symbol} from local API`, e);
+                }
+            }));
+
+            if (hasUpdates) {
+                setPrices(prev => ({
+                    ...prev,
+                    ...updates
+                }));
+                setUsingLiveApi(true);
+                setLastUpdated(new Date());
+            } else {
+                // Fallback to simulation if massive failure
+                simulatePrices();
+            }
+        } catch (error) {
+            console.error("Local API fetch failed:", error);
+            simulatePrices();
+        }
+    }, [simulatePrices]);
+
     useEffect(() => {
         // Only start token refresh scheduler if we have tokens
         const tokens = authService.getStoredTokens();
@@ -337,17 +400,17 @@ export function LivePriceProvider({ children }: { children: ReactNode }) {
         // Page loads with simulated data first, then connects to live feed
         const timer = setTimeout(() => {
             refreshPrices();
-        }, 5000); // 5 second delay - page loads and renders fully before attempting connection
+        }, 5000); // 5 second delay
 
         // Keep simulation running if not live (no user token)
+        // Modified to use local API if available, else simulation
         const interval = setInterval(async () => {
-            // We can't await in setInterval synchronously, but for check it's okay
-            // Better to rely on state `usingLiveApi` potentially, but let's check auth service
             const token = authService.getStoredTokens();
             if (!token) {
-                simulatePrices();
+                // Try to fetch from local API first
+                await fetchFromLocalApi();
             }
-        }, 1000); // 1 second simulation
+        }, 5000); // Poll every 5 seconds
 
         return () => {
             clearTimeout(timer);
@@ -361,7 +424,7 @@ export function LivePriceProvider({ children }: { children: ReactNode }) {
             // Stop the token refresh scheduler
             authService.stopTokenRefreshScheduler();
         };
-    }, [refreshPrices, simulatePrices]);
+    }, [refreshPrices, simulatePrices, fetchFromLocalApi]);
 
     return (
         <LivePriceContext.Provider value={{ prices, isConnected, lastUpdated, refreshPrices, usingLiveApi }}>

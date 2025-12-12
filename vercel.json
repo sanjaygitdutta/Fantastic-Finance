@@ -1,19 +1,13 @@
 {
     "rewrites": [
         {
-            "source": "/((?!google01b26828ad00a32b\\.html$).*)",
-            "destination": "/index.html"
+            "source": "/api/(.*)",
+            "destination": "/api/index.py"
         }
     ],
-    "headers": [
-        {
-            "source": "/(.*).html",
-            "headers": [
-                {
-                    "key": "Cache-Control",
-                    "value": "public, max-age=0, must-revalidate"
-                }
-            ]
+    "functions": {
+        "api/*.py": {
+            "runtime": "python3.9"
         }
-    ]
+    }
 }
