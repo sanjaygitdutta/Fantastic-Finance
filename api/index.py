@@ -25,7 +25,6 @@ def get_stock():
         
         # Iterate through the requested symbols
         for symbol, ticker_obj in tickers.tickers.items():
-             try:
             try:
                 # Initialize variables
                 current_price = 0.0
@@ -87,6 +86,14 @@ def get_stock():
             except Exception as e:
                 print(f"Error processing {symbol}: {e}")
                 continue
+        
+        if not mapped_results:
+             return jsonify({'error': 'No data found for symbols'}), 404
+        
+        flask_res = jsonify({'results': mapped_results})
+        # Disable caching to force real-time usage
+        flask_res.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+        return flask_res
 
 @app.route('/api/search', methods=['GET'])
 def search_stocks():
