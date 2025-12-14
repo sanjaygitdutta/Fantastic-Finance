@@ -161,7 +161,7 @@ export default function StrategyRecommendations() {
                                     {/* Actions */}
                                     <div className="flex gap-3">
                                         <Link
-                                            to="/strategy-builder"
+                                            to="/strategy"
                                             state={{
                                                 strategyName: strategy.name,
                                                 legs: strategy.instruments.map((inst, i) => {
@@ -185,7 +185,7 @@ export default function StrategyRecommendations() {
                                                         strike: strike || 24500,
                                                         premium: 100, // Mock premium
                                                         quantity: 50,
-                                                        expiry: '2024-12-28'
+                                                        expiry: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] // 7 days from now
                                                     };
                                                 })
                                             }}
@@ -210,7 +210,7 @@ export default function StrategyRecommendations() {
 
             {/* View All Link */}
             <Link
-                to="/strategy-builder"
+                to="/strategy"
                 className="mt-4 flex items-center justify-center gap-2 text-purple-600 dark:text-purple-400 font-medium text-sm hover:underline"
             >
                 View All Strategies <ArrowRight className="w-4 h-4" />

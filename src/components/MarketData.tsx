@@ -7,6 +7,7 @@ import { useLivePrices } from '../context/LivePriceContext';
 import LiveMarketTicker from './LiveMarketTicker';
 import LiveIndicesWidget from './LiveIndicesWidget';
 import LiveGlobalIndicesWidget from './LiveGlobalIndicesWidget';
+import { CryptoChartWidget } from './CryptoMarketWidgets';
 
 
 // World Indices Widget
@@ -490,11 +491,12 @@ export default memo(function MarketData() {
                     <div className="p-4 border-b border-slate-200 bg-slate-50">
                         <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
                             <Activity className="w-6 h-6 text-blue-600" />
-                            Cryptocurrencies
+                            Bitcoin Advanced Analysis
                         </h2>
                     </div>
-                    <div className="p-4">
-                        <CryptoWidget />
+                    {/* Use the Advanced Chart Widget instead of the simple list */}
+                    <div className="p-4 h-[500px]">
+                        <CryptoChartWidget />
                     </div>
                 </div>
 

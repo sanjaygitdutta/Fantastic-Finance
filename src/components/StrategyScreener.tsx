@@ -130,8 +130,8 @@ export default function StrategyScreener() {
                             key={f}
                             onClick={() => setFilter(f as any)}
                             className={`px-4 py-2 rounded-lg text-sm font-medium transition ${filter === f
-                                    ? 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300'
-                                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700'
+                                ? 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300'
+                                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700'
                                 }`}
                         >
                             {f}
@@ -173,8 +173,8 @@ export default function StrategyScreener() {
                                     <h3 className="font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2">
                                         {opp.symbol}
                                         <span className={`text-xs px-2 py-0.5 rounded font-medium ${opp.trend === 'Bullish' ? 'bg-green-100 text-green-700' :
-                                                opp.trend === 'Bearish' ? 'bg-red-100 text-red-700' :
-                                                    'bg-slate-100 text-slate-700'
+                                            opp.trend === 'Bearish' ? 'bg-red-100 text-red-700' :
+                                                'bg-slate-100 text-slate-700'
                                             }`}>
                                             {opp.trend}
                                         </span>
@@ -222,7 +222,7 @@ export default function StrategyScreener() {
                                     <p className="font-bold text-green-600">{opp.probability}%</p>
                                 </div>
                                 <Link
-                                    to="/strategy-builder"
+                                    to="/strategy"
                                     className="flex items-center gap-2 px-4 py-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-lg font-medium text-sm hover:opacity-90 transition"
                                 >
                                     Analyze <ArrowRight className="w-4 h-4" />
@@ -230,8 +230,8 @@ export default function StrategyScreener() {
                             </div>
                         </div>
                         <div className={`h-1.5 w-full ${opp.risk === 'Low' ? 'bg-green-500' :
-                                opp.risk === 'Medium' ? 'bg-yellow-500' :
-                                    'bg-red-500'
+                            opp.risk === 'Medium' ? 'bg-yellow-500' :
+                                'bg-red-500'
                             }`}></div>
                     </div>
                 ))}

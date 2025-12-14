@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Search, Bell, MessageSquare, Heart, Share2, MoreHorizontal,
   Image as ImageIcon, Smile, Send, ThumbsUp, Users,
@@ -68,6 +68,11 @@ export default function Community() {
   const handlePhotoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        alert('File size must be less than 5MB');
+        return;
+      }
+
       const reader = new FileReader();
       reader.onloadend = () => {
         setPhotoPreview(reader.result as string);
@@ -76,46 +81,36 @@ export default function Community() {
     }
   };
 
-  useEffect(() => {
-    fetchPosts();
-  }, [activeFeed]);
-
-  const fetchPosts = async () => {
-    setLoading(true);
+  const uploadImage = async (dataUrl: string): Promise<string | null> => {
     try {
-      const { data, error } = await supabase
-        .from('community_posts')
-        .select(`
-          *,
-          profiles:user_id (email)
-        `)
-        .order('created_at', { ascending: false });
+      const fileExt = 'png'; // Simplified for base64
+      const fileName = `${Math.random()}.${fileExt}`;
+      const filePath = `${user?.id}/${fileName}`;
 
-      if (error) throw error;
+      // Convert base64 to blob
+      const res = await fetch(dataUrl);
+      const blob = await res.blob();
 
-      const formattedPosts: Post[] = data?.map((post: any) => ({
-        id: post.id.toString(),
-        author: post.profiles?.email?.split('@')[0] || 'Anonymous',
-        handle: `@${post.profiles?.email?.split('@')[0] || 'user'}`,
-        time: new Date(post.created_at).toLocaleDateString(),
-        content: post.content,
-        type: post.type as any,
-        image_url: post.image_url,
-        likes: post.likes || 0,
-        comments: 0, // Placeholder
-        shares: 0, // Placeholder
-        created_at: post.created_at,
-        tradeDetails: post.trade_details,
-        pollDetails: post.poll_details,
-        avatar_url: `https://ui-avatars.com/api/?name=${post.profiles?.email || 'User'}&background=random`,
-        badges: [] // Placeholder
-      })) || [];
+      const { error: uploadError } = await supabase.storage
+        .from('community-images')
+        .upload(filePath, blob);
 
-      setPosts(formattedPosts);
+      if (uploadError) {
+        if (uploadError.message.includes('bucket not found')) {
+          alert('Storage bucket "community-images" not found. Please create it in Supabase dashboard.');
+          return null;
+        }
+        throw uploadError;
+      }
+
+      const { data } = supabase.storage
+        .from('community-images')
+        .getPublicUrl(filePath);
+
+      return data.publicUrl;
     } catch (error) {
-      console.error('Error fetching posts:', error);
-    } finally {
-      setLoading(false);
+      console.error('Error uploading image:', error);
+      return null;
     }
   };
 
@@ -125,7 +120,6 @@ export default function Community() {
       return;
     }
 
-    // Validation
     if (!newPostContent.trim() && postType === 'text') {
       alert('Please write something before posting');
       return;
@@ -142,31 +136,93 @@ export default function Community() {
     }
 
     setPosting(true);
-
-    const newPostData = {
-      user_id: user.id,
-      content: newPostContent || `Posted a ${postType}`,
-      type: postType,
-      image_url: photoPreview,
-      trade_details: postType === 'trade' ? {
-        symbol: tradeInput.symbol.toUpperCase(),
-        action: tradeInput.action,
-        entry: Number(tradeInput.entry),
-        target: Number(tradeInput.target),
-        stopLoss: Number(tradeInput.stopLoss),
-        status: 'OPEN'
-      } : null,
-      poll_details: postType === 'poll' ? {
-        question: pollInput.question,
-        options: [
-          { id: '1', text: pollInput.option1, votes: 0 },
-          { id: '2', text: pollInput.option2, votes: 0 }
-        ],
-        totalVotes: 0
-      } : null
-    };
+    let newPostData: any;
 
     try {
+      let finalImageUrl = null;
+      if (postType === 'photo' && photoPreview) {
+        // For Demo users, we just use the preview URL as the image URL since we can't upload to storage
+        if (localStorage.getItem('demo_user')) {
+          finalImageUrl = photoPreview;
+        } else {
+          finalImageUrl = await uploadImage(photoPreview);
+          if (!finalImageUrl) throw new Error('Image upload failed');
+        }
+      }
+
+      // CHECK FOR DEMO USER
+      if (localStorage.getItem('demo_user')) {
+        // Simulate network delay
+        await new Promise(resolve => setTimeout(resolve, 800));
+
+        const mockPost: Post = {
+          id: Date.now().toString(),
+          author: user.email?.split('@')[0] || 'Demo User',
+          handle: `@${user.email?.split('@')[0] || 'demo'}`,
+          avatar_url: `https://ui-avatars.com/api/?name=${user.email || 'Demo'}&background=random`,
+          time: 'Just now',
+          content: newPostContent || (postType === 'photo' ? 'Shared a photo' : `Posted a ${postType}`),
+          type: postType,
+          image_url: finalImageUrl || undefined,
+          likes: 0,
+          comments: 0,
+          shares: 0,
+          isLiked: false,
+          created_at: new Date().toISOString(),
+          tradeDetails: postType === 'trade' ? {
+            symbol: tradeInput.symbol.toUpperCase(),
+            action: tradeInput.action as 'BUY' | 'SELL',
+            entry: Number(tradeInput.entry),
+            target: Number(tradeInput.target),
+            stopLoss: Number(tradeInput.stopLoss),
+            status: 'OPEN'
+          } : undefined,
+          pollDetails: postType === 'poll' ? {
+            question: pollInput.question,
+            options: [
+              { id: '1', text: pollInput.option1, votes: 0 },
+              { id: '2', text: pollInput.option2, votes: 0 }
+            ],
+            totalVotes: 0
+          } : undefined,
+          badges: ['verified'] // Give demo user a badge for fun
+        };
+
+        setPosts([mockPost, ...posts]);
+        alert('Post created successfully! (Demo Mode) 🎉');
+
+        setNewPostContent('');
+        setTradeInput({ symbol: '', action: 'BUY', entry: '', target: '', stopLoss: '' });
+        setPollInput({ question: '', option1: '', option2: '' });
+        setPhotoPreview(null);
+        setPostType('text');
+        setPosting(false);
+        return;
+      }
+
+      newPostData = {
+        user_id: user.id,
+        content: newPostContent || (postType === 'photo' ? 'Shared a photo' : `Posted a ${postType}`),
+        type: postType,
+        image_url: finalImageUrl,
+        trade_details: postType === 'trade' ? {
+          symbol: tradeInput.symbol.toUpperCase(),
+          action: tradeInput.action,
+          entry: Number(tradeInput.entry),
+          target: Number(tradeInput.target),
+          stopLoss: Number(tradeInput.stopLoss),
+          status: 'OPEN'
+        } : null,
+        poll_details: postType === 'poll' ? {
+          question: pollInput.question,
+          options: [
+            { id: '1', text: pollInput.option1, votes: 0 },
+            { id: '2', text: pollInput.option2, votes: 0 }
+          ],
+          totalVotes: 0
+        } : null
+      };
+
       const { error } = await supabase
         .from('community_posts')
         .insert(newPostData);
@@ -176,16 +232,46 @@ export default function Community() {
       // Success feedback
       alert('Post created successfully! 🎉');
 
-      // Reset form and refresh
       setNewPostContent('');
       setTradeInput({ symbol: '', action: 'BUY', entry: '', target: '', stopLoss: '' });
       setPollInput({ question: '', option1: '', option2: '' });
       setPhotoPreview(null);
       setPostType('text');
       fetchPosts();
+
     } catch (error: any) {
       console.error('Error creating post:', error);
-      alert(`Failed to create post: ${error.message || 'Database error. Please check if community_posts table exists.'}`);
+
+      // Auto-fix: If error is about foreign key constraint on "user_id", it means Profile doesn't exist.
+      // We try to create the profile and retry the post.
+      if ((error.code === '23503' || error.message?.includes('violates foreign key constraint')) && newPostData) {
+        console.log('Profile missing, attempting to create...');
+        const { error: profileError } = await supabase.from('profiles').insert({
+          id: user.id,
+          email: user.email,
+          full_name: user.user_metadata?.full_name || user.email?.split('@')[0],
+          avatar_url: user.user_metadata?.avatar_url
+        });
+
+        if (!profileError) {
+          console.log('Profile created. Retrying post...');
+          const { error: retryError } = await supabase.from('community_posts').insert(newPostData);
+          if (!retryError) {
+            alert('Post created successfully! (Profile was auto-fixed) 🎉');
+            setNewPostContent('');
+            setTradeInput({ symbol: '', action: 'BUY', entry: '', target: '', stopLoss: '' });
+            setPollInput({ question: '', option1: '', option2: '' });
+            setPhotoPreview(null);
+            setPostType('text');
+            fetchPosts();
+            return; // Success on retry
+          }
+        } else {
+          console.error('Failed to auto-create profile:', profileError);
+        }
+      }
+
+      alert(`Failed to create post: ${error.message || 'Unknown error'}. Check console for details.`);
     } finally {
       setPosting(false);
     }
@@ -357,6 +443,9 @@ export default function Community() {
         </div>
 
         <div className="flex items-center gap-2">
+          <Link to="/" className="w-10 h-10 bg-[#E4E6EB] dark:bg-[#3A3B3C] rounded-full flex items-center justify-center hover:bg-[#D8DADF] dark:hover:bg-[#4E4F50] transition" title="Back to Home">
+            <Home className="w-5 h-5 text-black dark:text-white" />
+          </Link>
           <button className="w-10 h-10 bg-[#E4E6EB] dark:bg-[#3A3B3C] rounded-full flex items-center justify-center hover:bg-[#D8DADF] dark:hover:bg-[#4E4F50] transition">
             <Bell className="w-5 h-5 text-black dark:text-white" />
           </button>
@@ -753,18 +842,6 @@ export default function Community() {
 
         </div>
       </div>
-
-      {/* Floating Home Button */}
-      <Link
-        to="/"
-        className="fixed bottom-8 right-8 w-14 h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-2xl flex items-center justify-center transition-all hover:scale-110 z-50 group"
-        title="Back to Home"
-      >
-        <Home className="w-6 h-6" />
-        <span className="absolute bottom-full mb-2 bg-slate-900 text-white text-xs px-3 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition whitespace-nowrap">
-          Back to Home
-        </span>
-      </Link>
 
       {/* AdSense In-Feed Ad */}
       <InFeedAd adSlot="1234567898" className="mt-6" />

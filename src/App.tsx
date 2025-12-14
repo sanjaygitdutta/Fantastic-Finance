@@ -3,11 +3,13 @@ import { Routes, Route } from 'react-router-dom';
 import { useAuth } from './hooks/useAuth';
 import Navigation from './components/Navigation';
 import ErrorBoundary from './components/ErrorBoundary';
+import ScrollToTop from './components/ScrollToTop';
 import Layout from './components/Layout';
 import SEO from './components/SEO';
 import { useAnalytics } from './hooks/useAnalytics';
 import Footer from './components/Footer';
-
+import './index.css';
+import { useTheme } from './context/ThemeContext';
 import { useAntiScraping } from './hooks/useAntiScraping';
 
 // Lazy load landing page components for better performance
@@ -76,6 +78,8 @@ const Brokers = lazy(() => import('./pages/Brokers'));
 const StrategyRecommendations = lazy(() => import('./components/StrategyRecommendations'));
 const AIAssistant = lazy(() => import('./components/AIAssistant'));
 const HeaderDemo = lazy(() => import('./pages/HeaderDemo'));
+const WallStreet = lazy(() => import('./pages/WallStreet'));
+const CryptoMarket = lazy(() => import('./pages/CryptoMarket'));
 import AdminProtectedRoute from './components/AdminProtectedRoute';
 
 // Loading Fallback Component
@@ -87,6 +91,7 @@ const PageLoader = () => (
 
 function App() {
   const { user, loading } = useAuth();
+  const { theme } = useTheme();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
 
@@ -138,6 +143,8 @@ function App() {
                   <MarketData />
                 </>
               } />
+              <Route path="wallstreet" element={<WallStreet />} />
+              <Route path="crypto" element={<CryptoMarket />} />
               <Route path="news" element={<NewsRoom />} />
               <Route path="header-demo" element={
                 <>
@@ -214,7 +221,8 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+    <div className={`min-h-screen bg-slate-50 dark:bg-slate-900 transition-colors duration-200 ${theme}`}>
+      <ScrollToTop />
       <ErrorBoundary>
         <Suspense fallback={<PageLoader />}>
           <Routes>

@@ -47,12 +47,23 @@ export default function StrategyBuilder() {
     })), spotPrice) : null;
 
     useEffect(() => {
-        if (initialState?.strategyName) {
-            logEvent('feature_used', { feature: 'Strategy Builder - Deployed from AI', strategyName: initialState.strategyName });
-        } else {
-            logEvent('feature_used', { feature: 'Strategy Builder' });
+        console.log('StrategyBuilder: Location State Received:', location.state);
+
+        // Handle direct state checks if initialState variable is stale or check fresh location.state
+        const currentState = location.state as { strategyName?: string; legs?: OptionLeg[] } | null;
+
+        if (currentState?.strategyName) {
+            console.log('StrategyBuilder: Setting Strategy Name:', currentState.strategyName);
+            setStrategyName(currentState.strategyName);
         }
-    }, [initialState]);
+
+        if (currentState?.legs) {
+            console.log('StrategyBuilder: Setting Legs:', currentState.legs);
+            setLegs(currentState.legs);
+            // Default to builder tab
+            setActiveTab('builder');
+        }
+    }, [location.state]); // Depend specifically on location.state
 
     // Dynamic Strategy Templates
     const templates = [

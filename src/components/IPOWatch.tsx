@@ -4,28 +4,36 @@ import { Calendar, ArrowRight } from 'lucide-react';
 export default function IPOWatch() {
     const ipos = [
         {
-            name: 'Ola Electric Mobility',
+            name: 'ICICI Pru AMC',
             status: 'Open',
-            priceBand: '72 - 76',
-            lotSize: 195,
-            subscription: '4.5x',
-            closeDate: 'Aug 6'
+            priceBand: '510 - 535',
+            lotSize: 28,
+            subscription: '2.4x',
+            closeDate: 'Dec 16'
         },
         {
-            name: 'FirstCry (Brainbees)',
+            name: 'KSH International',
             status: 'Upcoming',
-            priceBand: '440 - 465',
-            lotSize: 32,
+            priceBand: '210 - 225',
+            lotSize: 65,
             subscription: '-',
-            closeDate: 'Aug 8'
+            closeDate: 'Dec 18'
         },
         {
-            name: 'Unicommerce eSolutions',
+            name: 'Park Medi World',
             status: 'Closed',
-            priceBand: '102 - 108',
-            lotSize: 138,
-            subscription: '168x',
-            closeDate: 'Aug 5'
+            priceBand: '85 - 90',
+            lotSize: 160,
+            subscription: '45x',
+            closeDate: 'Dec 10'
+        },
+        {
+            name: 'Wakefit Innovations',
+            status: 'Closed',
+            priceBand: '320 - 340',
+            lotSize: 44,
+            subscription: '12.8x',
+            closeDate: 'Dec 8'
         }
     ];
 
@@ -45,8 +53,8 @@ export default function IPOWatch() {
                             <div className="flex items-center gap-2">
                                 <h4 className="font-bold text-sm text-slate-800">{ipo.name}</h4>
                                 <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${ipo.status === 'Open' ? 'bg-green-100 text-green-700' :
-                                        ipo.status === 'Upcoming' ? 'bg-blue-100 text-blue-700' :
-                                            'bg-slate-100 text-slate-600'
+                                    ipo.status === 'Upcoming' ? 'bg-blue-100 text-blue-700' :
+                                        'bg-slate-100 text-slate-600'
                                     }`}>
                                     {ipo.status}
                                 </span>

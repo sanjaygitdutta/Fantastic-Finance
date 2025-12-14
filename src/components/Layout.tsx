@@ -1,6 +1,11 @@
 import { useState } from 'react';
 import { Link, useLocation, Outlet } from 'react-router-dom';
-import { TrendingUp, Globe, Newspaper, Zap, BarChart2, Activity, Users, Filter, GraduationCap, Heart, User, Settings as SettingsIcon, LogOut, Menu, X, Star, Briefcase, Bell, Calendar, TrendingUpIcon, Link as LinkIcon, Calculator, Brain, Shield } from 'lucide-react';
+import {
+    TrendingUp, Globe, Newspaper, Zap, BarChart2, Activity, Filter,
+    GraduationCap, Heart, User, LogOut, Menu, X,
+    Star, Briefcase, Bell, Calendar, Link as LinkIcon, Calculator, Brain,
+    Shield, ChevronDown, Monitor, PieChart, DollarSign, Layers, Settings
+} from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import MarketPulse from './MarketPulse';
 import AIAssistant from './AIAssistant';
@@ -17,44 +22,39 @@ export default function Layout() {
     const handleSignOut = async () => {
         try {
             console.log('Signing out...');
-            // 1. Clear Application State
             localStorage.removeItem('demo_user');
             localStorage.removeItem('upstox_access_token');
             localStorage.removeItem('upstox_refresh_token');
 
-            // 2. Clear Supabase Tokens (Manual Fail-safe)
-            // This ensures useAuth doesn't automatically re-login the user on reload
             Object.keys(localStorage).forEach(key => {
                 if (key.startsWith('sb-') && key.endsWith('-auth-token')) {
                     localStorage.removeItem(key);
                 }
             });
 
-            // 3. Dispatch Events to update UI immediately
             window.dispatchEvent(new Event('demo_login'));
             window.dispatchEvent(new Event('storage'));
 
-            // 4. API Sign Out (best effort, don't block if network fails)
             await supabase.auth.signOut().catch((err: Error) => console.warn('Supabase signout suppressed:', err));
 
         } catch (error) {
             console.error('Sign out logic error:', error);
         } finally {
-            // 5. Hard Redirect (Replace history to prevent back-button return)
             console.log('Redirecting to landing page...');
             window.location.replace('/');
         }
     };
 
     const isActive = (path: string) => location.pathname === path;
-
     const closeMobileMenu = () => setIsMobileMenuOpen(false);
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-950 flex flex-col">
-            <nav className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 transition-colors duration-200">
-                <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
+            <nav className="sticky top-0 z-50 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 transition-colors duration-200">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex justify-between items-center h-16">
+
+                        {/* LEFT: Logo & Mobile Menu Toggle */}
                         <div className="flex items-center gap-3">
                             <button
                                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -64,7 +64,7 @@ export default function Layout() {
                             </button>
 
                             <Link to="/" className="flex items-center gap-2 flex-shrink-0" onClick={closeMobileMenu}>
-                                <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center">
+                                <div className="w-9 h-9 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center shadow-md">
                                     <TrendingUp className="w-5 h-5 text-white" />
                                 </div>
                                 <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent whitespace-nowrap">
@@ -73,258 +73,164 @@ export default function Layout() {
                             </Link>
                         </div>
 
-                        {/* Desktop Navigation */}
-                        <div className="hidden lg:flex items-center gap-0.5 flex-wrap">
-                            <Link
-                                to="/markets"
-                                className={`flex items-center gap-1 px-2 py-2 rounded-lg transition font-medium text-xs whitespace-nowrap ${isActive('/markets')
-                                    ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
-                                    : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-                                    }`}
-                            >
-                                <Globe className="w-4 h-4" />
-                                Markets
-                            </Link>
-                            <Link
-                                to="/news"
-                                className={`flex items-center gap-1 px-2 py-2 rounded-lg transition font-medium text-xs whitespace-nowrap ${isActive('/news')
-                                    ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
-                                    : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-                                    }`}
-                            >
-                                <Newspaper className="w-4 h-4" />
-                                News
-                            </Link>
-                            <Link
-                                to="/strategy"
-                                className={`flex items-center gap-1 px-2 py-2 rounded-lg transition font-medium text-xs whitespace-nowrap ${isActive('/strategy')
-                                    ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
-                                    : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-                                    }`}
-                            >
-                                <Zap className="w-4 h-4" />
-                                Strategy
-                            </Link>
-                            <Link
-                                to="/charts"
-                                className={`flex items-center gap-1 px-2 py-2 rounded-lg transition font-medium text-xs whitespace-nowrap ${isActive('/charts')
-                                    ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
-                                    : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-                                    }`}
-                            >
-                                <BarChart2 className="w-4 h-4" />
-                                Charts
-                            </Link>
-                            <Link
-                                to="/straddle"
-                                className={`flex items-center gap-1 px-2 py-2 rounded-lg transition font-medium text-xs whitespace-nowrap ${isActive('/straddle')
-                                    ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
-                                    : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-                                    }`}
-                            >
-                                <Activity className="w-4 h-4" />
-                                Premium
-                            </Link>
-                            <Link
-                                to="/option-chain"
-                                className={`flex items-center gap-1 px-2 py-2 rounded-lg transition font-medium text-xs whitespace-nowrap ${isActive('/option-chain')
-                                    ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
-                                    : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-                                    }`}
-                            >
-                                <Activity className="w-4 h-4" />
-                                Options
-                            </Link>
-                            <Link
-                                to="/iv-analysis"
-                                className={`flex items-center gap-1 px-2 py-2 rounded-lg transition font-medium text-xs whitespace-nowrap ${isActive('/iv-analysis')
-                                    ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
-                                    : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-                                    }`}
-                            >
-                                <TrendingUp className="w-4 h-4" />
-                                IV Analysis
-                            </Link>
-                            <Link
-                                to="/scanner"
-                                className={`flex items-center gap-1 px-2 py-2 rounded-lg transition font-medium text-xs whitespace-nowrap ${isActive('/scanner')
-                                    ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
-                                    : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-                                    }`}
-                            >
-                                <Filter className="w-4 h-4" />
-                                Scanner
-                            </Link>
-                            <Link
-                                to="/technical"
-                                className={`flex items-center gap-1 px-2 py-2 rounded-lg transition font-medium text-xs whitespace-nowrap ${isActive('/technical')
-                                    ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
-                                    : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-                                    }`}
-                            >
-                                <Activity className="w-4 h-4" />
-                                Technical
-                            </Link>
-                            <Link
-                                to="/community"
-                                className={`flex items-center gap-1 px-2 py-2 rounded-lg transition font-medium text-xs whitespace-nowrap ${isActive('/community')
-                                    ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
-                                    : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-                                    }`}
-                            >
-                                <Users className="w-4 h-4" />
+                        {/* CENTER: Desktop Navigation with Dropdowns */}
+                        <div className="hidden lg:flex items-center gap-8">
+
+                            {/* MARKETS DROPDOWN */}
+                            <div className="relative group">
+                                <button className={`flex items-center gap-1 text-sm font-medium ${['/markets', '/wallstreet', '/news', '/ipo', '/calendar'].some(p => isActive(p)) ? 'text-blue-600 dark:text-blue-400' : 'text-slate-700 dark:text-slate-300'} hover:text-blue-600 dark:hover:text-blue-400 transition-colors py-4 focus:outline-none`}>
+                                    Markets <ChevronDown className="w-3 h-3 opacity-70 group-hover:rotate-180 transition-transform" />
+                                </button>
+                                <div className="absolute top-full left-0 w-52 bg-white dark:bg-slate-900 rounded-lg shadow-xl border border-slate-100 dark:border-slate-800 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform translate-y-2 group-hover:translate-y-0 p-1 z-50">
+                                    <Link to="/markets" className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-slate-50 dark:hover:bg-slate-800 text-sm text-slate-700 dark:text-slate-200">
+                                        <Globe className="w-4 h-4 text-blue-500" /> Market
+                                    </Link>
+                                    <Link to="/wallstreet" className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-slate-50 dark:hover:bg-slate-800 text-sm text-slate-700 dark:text-slate-200">
+                                        <TrendingUp className="w-4 h-4 text-rose-500" /> Wall Street
+                                    </Link>
+                                    <Link to="/news" className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-slate-50 dark:hover:bg-slate-800 text-sm text-slate-700 dark:text-slate-200">
+                                        <Newspaper className="w-4 h-4 text-slate-500" /> News
+                                    </Link>
+                                    <div className="h-px bg-slate-100 dark:bg-slate-800 my-1"></div>
+                                    <Link to="/ipo" className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-slate-50 dark:hover:bg-slate-800 text-sm text-slate-700 dark:text-slate-200">
+                                        <Layers className="w-4 h-4 text-purple-500" /> IPO
+                                    </Link>
+                                    <Link to="/calendar" className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-slate-50 dark:hover:bg-slate-800 text-sm text-slate-700 dark:text-slate-200">
+                                        <Calendar className="w-4 h-4 text-orange-500" /> Calendar
+                                    </Link>
+                                </div>
+                            </div>
+
+                            {/* ANALYSIS DROPDOWN */}
+                            <div className="relative group">
+                                <button className={`flex items-center gap-1 text-sm font-medium ${['/strategy', '/analytics', '/straddle', '/charts', '/option-chain', '/iv-analysis', '/technical'].some(p => isActive(p)) ? 'text-blue-600 dark:text-blue-400' : 'text-slate-700 dark:text-slate-300'} hover:text-blue-600 dark:hover:text-blue-400 transition-colors py-4 focus:outline-none`}>
+                                    Analysis <ChevronDown className="w-3 h-3 opacity-70 group-hover:rotate-180 transition-transform" />
+                                </button>
+                                <div className="absolute top-full left-0 w-56 bg-white dark:bg-slate-900 rounded-lg shadow-xl border border-slate-100 dark:border-slate-800 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform translate-y-2 group-hover:translate-y-0 p-1 z-50">
+                                    <Link to="/strategy" className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-slate-50 dark:hover:bg-slate-800 text-sm text-slate-700 dark:text-slate-200">
+                                        <Brain className="w-4 h-4 text-purple-500" /> Strategy Builder
+                                    </Link>
+                                    <Link to="/analytics" className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-slate-50 dark:hover:bg-slate-800 text-sm text-slate-700 dark:text-slate-200">
+                                        <BarChart2 className="w-4 h-4 text-orange-500" /> Analytics
+                                    </Link>
+                                    <Link to="/straddle" className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-slate-50 dark:hover:bg-slate-800 text-sm text-slate-700 dark:text-slate-200">
+                                        <Activity className="w-4 h-4 text-pink-500" /> Premium Charts
+                                    </Link>
+                                    <Link to="/charts" className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-slate-50 dark:hover:bg-slate-800 text-sm text-slate-700 dark:text-slate-200">
+                                        <BarChart2 className="w-4 h-4 text-blue-500" /> Advanced Charts
+                                    </Link>
+                                    <Link to="/option-chain" className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-slate-50 dark:hover:bg-slate-800 text-sm text-slate-700 dark:text-slate-200">
+                                        <Activity className="w-4 h-4 text-emerald-500" /> Option Chain
+                                    </Link>
+                                    <div className="h-px bg-slate-100 dark:bg-slate-800 my-1"></div>
+                                    <Link to="/iv-analysis" className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-slate-50 dark:hover:bg-slate-800 text-sm text-slate-700 dark:text-slate-200">
+                                        <PieChart className="w-4 h-4 text-pink-500" /> IV Analysis
+                                    </Link>
+                                    <Link to="/technical" className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-slate-50 dark:hover:bg-slate-800 text-sm text-slate-700 dark:text-slate-200">
+                                        <Activity className="w-4 h-4 text-teal-500" /> Technicals
+                                    </Link>
+                                </div>
+                            </div>
+
+                            {/* CURRENCY & ASSETS DROPDOWN */}
+                            <div className="relative group">
+                                <button className={`flex items-center gap-1 text-sm font-medium ${['/currency', '/crypto', '/commodity', '/bond', '/etf'].some(p => isActive(p)) ? 'text-blue-600 dark:text-blue-400' : 'text-slate-700 dark:text-slate-300'} hover:text-blue-600 dark:hover:text-blue-400 transition-colors py-4 focus:outline-none`}>
+                                    Currency & Assets <ChevronDown className="w-3 h-3 opacity-70 group-hover:rotate-180 transition-transform" />
+                                </button>
+                                <div className="absolute top-full left-0 w-48 bg-white dark:bg-slate-900 rounded-lg shadow-xl border border-slate-100 dark:border-slate-800 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform translate-y-2 group-hover:translate-y-0 p-1 z-50">
+                                    <Link to="/currency" className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-slate-50 dark:hover:bg-slate-800 text-sm text-slate-700 dark:text-slate-200">
+                                        <DollarSign className="w-4 h-4 text-green-500" /> Forex / Currency
+                                    </Link>
+                                    <Link to="/crypto" className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-slate-50 dark:hover:bg-slate-800 text-sm text-slate-700 dark:text-slate-200">
+                                        <Zap className="w-4 h-4 text-orange-500" /> Crypto
+                                    </Link>
+                                    <Link to="/commodity" className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-slate-50 dark:hover:bg-slate-800 text-sm text-slate-700 dark:text-slate-200">
+                                        <Shield className="w-4 h-4 text-yellow-500" /> Commodities
+                                    </Link>
+                                    <div className="h-px bg-slate-100 dark:bg-slate-800 my-1"></div>
+                                    <Link to="/bond" className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-slate-50 dark:hover:bg-slate-800 text-sm text-slate-700 dark:text-slate-200">
+                                        <Activity className="w-4 h-4 text-blue-400" /> Bonds
+                                    </Link>
+                                    <Link to="/etf" className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-slate-50 dark:hover:bg-slate-800 text-sm text-slate-700 dark:text-slate-200">
+                                        <Layers className="w-4 h-4 text-indigo-400" /> ETFs
+                                    </Link>
+                                </div>
+                            </div>
+
+                            {/* TOOLS / ACADEMY DROPDOWN */}
+                            <div className="relative group">
+                                <button className={`flex items-center gap-1 text-sm font-medium ${['/calculators', '/daily-quiz', '/academy', '/links', '/scanner', '/screener'].some(p => isActive(p)) ? 'text-blue-600 dark:text-blue-400' : 'text-slate-700 dark:text-slate-300'} hover:text-blue-600 dark:hover:text-blue-400 transition-colors py-4 focus:outline-none`}>
+                                    Tools <ChevronDown className="w-3 h-3 opacity-70 group-hover:rotate-180 transition-transform" />
+                                </button>
+                                <div className="absolute top-full left-0 w-48 bg-white dark:bg-slate-900 rounded-lg shadow-xl border border-slate-100 dark:border-slate-800 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform translate-y-2 group-hover:translate-y-0 p-1 z-50">
+                                    <Link to="/calculators" className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-slate-50 dark:hover:bg-slate-800 text-sm text-slate-700 dark:text-slate-200">
+                                        <Calculator className="w-4 h-4 text-slate-500" /> Calculators
+                                    </Link>
+
+                                    <Link to="/scanner" className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-slate-50 dark:hover:bg-slate-800 text-sm text-slate-700 dark:text-slate-200">
+                                        <Monitor className="w-4 h-4 text-indigo-500" /> Market Scanner
+                                    </Link>
+                                    <Link to="/screener" className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-slate-50 dark:hover:bg-slate-800 text-sm text-slate-700 dark:text-slate-200">
+                                        <Filter className="w-4 h-4 text-cyan-500" /> Stock Screener
+                                    </Link>
+                                    <Link to="/daily-quiz" className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-slate-50 dark:hover:bg-slate-800 text-sm text-slate-700 dark:text-slate-200">
+                                        <Brain className="w-4 h-4 text-pink-500" /> Daily Quiz
+                                    </Link>
+                                    <Link to="/links" className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-slate-50 dark:hover:bg-slate-800 text-sm text-slate-700 dark:text-slate-200">
+                                        <LinkIcon className="w-4 h-4 text-blue-400" /> Important Links
+                                    </Link>
+                                    <div className="h-px bg-slate-100 dark:bg-slate-800 my-1"></div>
+                                    <Link to="/academy" className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-slate-50 dark:hover:bg-slate-800 text-sm text-slate-700 dark:text-slate-200">
+                                        <GraduationCap className="w-4 h-4 text-emerald-500" /> Academy
+                                    </Link>
+                                </div>
+                            </div>
+
+                            {/* PORTFOLIO DROPDOWN */}
+                            <div className="relative group">
+                                <button className={`flex items-center gap-1 text-sm font-medium ${['/portfolio', '/watchlist', '/alerts'].some(p => isActive(p)) ? 'text-blue-600 dark:text-blue-400' : 'text-slate-700 dark:text-slate-300'} hover:text-blue-600 dark:hover:text-blue-400 transition-colors py-4 focus:outline-none`}>
+                                    Portfolio <ChevronDown className="w-3 h-3 opacity-70 group-hover:rotate-180 transition-transform" />
+                                </button>
+                                <div className="absolute top-full left-0 w-48 bg-white dark:bg-slate-900 rounded-lg shadow-xl border border-slate-100 dark:border-slate-800 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform translate-y-2 group-hover:translate-y-0 p-1 z-50">
+                                    <Link to="/portfolio" className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-slate-50 dark:hover:bg-slate-800 text-sm text-slate-700 dark:text-slate-200">
+                                        <Briefcase className="w-4 h-4 text-slate-500" /> My Portfolio
+                                    </Link>
+                                    <Link to="/watchlist" className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-slate-50 dark:hover:bg-slate-800 text-sm text-slate-700 dark:text-slate-200">
+                                        <Star className="w-4 h-4 text-yellow-500" /> Watchlist
+                                    </Link>
+                                    <Link to="/alerts" className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-slate-50 dark:hover:bg-slate-800 text-sm text-slate-700 dark:text-slate-200">
+                                        <Bell className="w-4 h-4 text-red-500" /> Alerts
+                                    </Link>
+                                </div>
+                            </div>
+
+                            {/* COMMUNITY LINK (Beside Portfolio) */}
+                            <Link to="/community" className={`text-sm font-medium ${isActive('/community') ? 'text-blue-600 dark:text-blue-400' : 'text-slate-700 dark:text-slate-300'} hover:text-blue-600 dark:hover:text-blue-400 transition-colors`}>
                                 Community
                             </Link>
-                            <Link
-                                to="/analytics"
-                                className={`flex items-center gap-1 px-2 py-2 rounded-lg transition font-medium text-xs whitespace-nowrap ${isActive('/analytics')
-                                    ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
-                                    : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-                                    }`}
-                            >
-                                <BarChart2 className="w-4 h-4" />
-                                Analytics
-                            </Link>
-                            <Link
-                                to="/screener"
-                                className={`flex items-center gap-1 px-2 py-2 rounded-lg transition font-medium text-xs whitespace-nowrap ${isActive('/screener')
-                                    ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
-                                    : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-                                    }`}
-                            >
-                                <Filter className="w-4 h-4" />
-                                Screener
-                            </Link>
-                            <Link
-                                to="/watchlist"
-                                className={`flex items-center gap-1 px-2 py-2 rounded-lg transition font-medium text-xs whitespace-nowrap ${isActive('/watchlist')
-                                    ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
-                                    : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-                                    }`}
-                            >
-                                <Star className="w-4 h-4" />
-                                Watchlist
-                            </Link>
-                            <Link
-                                to="/portfolio"
-                                className={`flex items-center gap-1 px-2 py-2 rounded-lg transition font-medium text-xs whitespace-nowrap ${isActive('/portfolio')
-                                    ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
-                                    : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-                                    }`}
-                            >
-                                <Briefcase className="w-4 h-4" />
-                                Portfolio
-                            </Link>
-                            <Link
-                                to="/alerts"
-                                className={`flex items-center gap-1 px-2 py-2 rounded-lg transition font-medium text-xs whitespace-nowrap ${isActive('/alerts')
-                                    ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
-                                    : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-                                    }`}
-                            >
-                                <Bell className="w-4 h-4" />
-                                Alerts
-                            </Link>
-                            <Link
-                                to="/calendar"
-                                className={`flex items-center gap-1 px-2 py-2 rounded-lg transition font-medium text-xs whitespace-nowrap ${isActive('/calendar')
-                                    ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
-                                    : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-                                    }`}
-                            >
-                                <Calendar className="w-4 h-4" />
-                                Calendar
-                            </Link>
-                            <Link
-                                to="/ipo"
-                                className={`flex items-center gap-1 px-2 py-2 rounded-lg transition font-medium text-xs whitespace-nowrap ${isActive('/ipo')
-                                    ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
-                                    : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-                                    }`}
-                            >
-                                <TrendingUpIcon className="w-4 h-4" />
-                                IPO
-                            </Link>
-                            <Link
-                                to="/links"
-                                className={`flex items-center gap-1 px-2 py-2 rounded-lg transition font-medium text-xs whitespace-nowrap ${isActive('/links')
-                                    ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
-                                    : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-                                    }`}
-                            >
-                                <LinkIcon className="w-4 h-4" />
-                                Links
-                            </Link>
-                            <Link
-                                to="/calculators"
-                                className={`flex items-center gap-1 px-2 py-2 rounded-lg transition font-medium text-xs whitespace-nowrap ${isActive('/calculators')
-                                    ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
-                                    : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-                                    }`}
-                            >
-                                <Calculator className="w-4 h-4" />
-                                Calculators
-                            </Link>
-                            <Link
-                                to="/etf"
-                                className={`flex items-center gap-1 px-2 py-2 rounded-lg transition font-medium text-xs whitespace-nowrap ${isActive('/etf')
-                                    ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
-                                    : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-                                    }`}
-                            >
-                                <BarChart2 className="w-4 h-4" />
-                                ETF
-                            </Link>
-                            <Link
-                                to="/bond"
-                                className={`flex items-center gap-1 px-2 py-2 rounded-lg transition font-medium text-xs whitespace-nowrap ${isActive('/bond')
-                                    ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
-                                    : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-                                    }`}
-                            >
-                                <Shield className="w-4 h-4" />
-                                Bond
-                            </Link>
-                            <Link
-                                to="/currency"
-                                className={`flex items-center gap-1 px-2 py-2 rounded-lg transition font-medium text-xs whitespace-nowrap ${isActive('/currency')
-                                    ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
-                                    : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-                                    }`}
-                            >
-                                <Globe className="w-4 h-4" />
-                                Currency
-                            </Link>
-                            <Link
-                                to="/commodity"
-                                className={`flex items-center gap-1 px-2 py-2 rounded-lg transition font-medium text-xs whitespace-nowrap ${isActive('/commodity')
-                                    ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
-                                    : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-                                    }`}
-                            >
-                                <Zap className="w-4 h-4" />
-                                Commodity
-                            </Link>
-                            <Link
-                                to="/daily-quiz"
-                                className={`flex items-center gap-1 px-2 py-2 rounded-lg transition font-medium text-xs whitespace-nowrap ${isActive('/daily-quiz')
-                                    ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
-                                    : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-                                    }`}
-                            >
-                                <Brain className="w-4 h-4" />
-                                Quick Quiz
-                            </Link>
-                            <Link
-                                to="/academy"
-                                className={`flex items-center gap-1 px-2 py-2 rounded-lg transition font-medium text-xs whitespace-nowrap ${isActive('/academy')
-                                    ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
-                                    : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-                                    }`}
-                            >
-                                <GraduationCap className="w-4 h-4" />
-                                Academy
-                            </Link>
+
+                        </div>
+
+                        {/* RIGHT: User Actions */}
+                        <div className="hidden lg:flex items-center gap-4">
+                            <div className="flex items-center gap-3">
+                                <button
+                                    onClick={() => setDonationModalOpen(true)}
+                                    className="hidden lg:flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-pink-500 to-red-500 text-white rounded-full text-sm font-medium hover:from-pink-600 hover:to-red-600 transition shadow-sm mr-2"
+                                >
+                                    <Heart className="w-4 h-4 fill-white" /> Donate
+                                </button>
+                                <Link to="/profile" className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-200 hover:text-blue-600 transition">
+                                    <User className="w-5 h-5" />
+                                    <span className="hidden xl:inline">Profile</span>
+                                </Link>
+                                <Link to="/settings" className="text-slate-500 hover:text-blue-600 transition" title="Settings">
+                                    <Settings className="w-5 h-5" />
+                                </Link>
+                                <button onClick={handleSignOut} className="text-red-600 hover:text-red-700 transition" title="Sign Out">
+                                    <LogOut className="w-5 h-5" />
+                                </button>
+                            </div>
                         </div>
 
                     </div>
@@ -332,42 +238,51 @@ export default function Layout() {
 
                 {/* Mobile Menu */}
                 {isMobileMenuOpen && (
-                    <div className="lg:hidden border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+                    <div className="lg:hidden border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 relative z-50">
                         <div className="px-4 py-2 space-y-1 max-h-[calc(100vh-4rem)] overflow-y-auto">
-                            <Link to="/markets" onClick={closeMobileMenu} className="block px-3 py-2 rounded-lg text-base font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800">Markets</Link>
-                            <Link to="/news" onClick={closeMobileMenu} className="block px-3 py-2 rounded-lg text-base font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800">News</Link>
-                            <Link to="/strategy" onClick={closeMobileMenu} className="block px-3 py-2 rounded-lg text-base font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800">Strategy</Link>
-                            <Link to="/charts" onClick={closeMobileMenu} className="block px-3 py-2 rounded-lg text-base font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800">Charts</Link>
-                            <Link to="/straddle" onClick={closeMobileMenu} className="block px-3 py-2 rounded-lg text-base font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800">Premium</Link>
-                            <Link to="/option-chain" onClick={closeMobileMenu} className="block px-3 py-2 rounded-lg text-base font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800">Options</Link>
-                            <Link to="/iv-analysis" onClick={closeMobileMenu} className="block px-3 py-2 rounded-lg text-base font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800">IV Analysis</Link>
-                            <Link to="/scanner" onClick={closeMobileMenu} className="block px-3 py-2 rounded-lg text-base font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800">Scanner</Link>
-                            <Link to="/technical" onClick={closeMobileMenu} className="block px-3 py-2 rounded-lg text-base font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800">Technical</Link>
-                            <Link to="/community" onClick={closeMobileMenu} className="block px-3 py-2 rounded-lg text-base font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800">Community</Link>
-                            <Link to="/analytics" onClick={closeMobileMenu} className="block px-3 py-2 rounded-lg text-base font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800">Analytics</Link>
-                            <Link to="/screener" onClick={closeMobileMenu} className="block px-3 py-2 rounded-lg text-base font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800">Screener</Link>
-                            <Link to="/watchlist" onClick={closeMobileMenu} className="block px-3 py-2 rounded-lg text-base font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800">Watchlist</Link>
-                            <Link to="/portfolio" onClick={closeMobileMenu} className="block px-3 py-2 rounded-lg text-base font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800">Portfolio</Link>
-                            <Link to="/alerts" onClick={closeMobileMenu} className="block px-3 py-2 rounded-lg text-base font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800">Alerts</Link>
-                            <Link to="/calendar" onClick={closeMobileMenu} className="block px-3 py-2 rounded-lg text-base font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800">Calendar</Link>
-                            <Link to="/ipo" onClick={closeMobileMenu} className="block px-3 py-2 rounded-lg text-base font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800">IPO</Link>
-                            <Link to="/links" onClick={closeMobileMenu} className="block px-3 py-2 rounded-lg text-base font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800">Important Links</Link>
-                            <Link to="/calculators" onClick={closeMobileMenu} className="block px-3 py-2 rounded-lg text-base font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800">Calculators</Link>
-                            <Link to="/etf" onClick={closeMobileMenu} className="block px-3 py-2 rounded-lg text-base font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800">ETF</Link>
-                            <Link to="/bond" onClick={closeMobileMenu} className="block px-3 py-2 rounded-lg text-base font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800">Bond</Link>
-                            <Link to="/currency" onClick={closeMobileMenu} className="block px-3 py-2 rounded-lg text-base font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800">Currency</Link>
-                            <Link to="/commodity" onClick={closeMobileMenu} className="block px-3 py-2 rounded-lg text-base font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800">Commodity</Link>
-                            <Link to="/daily-quiz" onClick={closeMobileMenu} className="block px-3 py-2 rounded-lg text-base font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800">Quick Quiz</Link>
-                            <Link to="/academy" onClick={closeMobileMenu} className="block px-3 py-2 rounded-lg text-base font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800">Academy</Link>
+                            <div className="font-semibold text-xs text-slate-400 uppercase tracking-wider mt-4 mb-2">Markets</div>
+                            <Link to="/markets" onClick={closeMobileMenu} className="mobile-nav-link pl-4 border-l-2 border-transparent hover:border-blue-500">Market</Link>
+                            <Link to="/wallstreet" onClick={closeMobileMenu} className="mobile-nav-link pl-4 border-l-2 border-transparent hover:border-blue-500">Wall Street</Link>
+                            <Link to="/news" onClick={closeMobileMenu} className="mobile-nav-link pl-4 border-l-2 border-transparent hover:border-blue-500">News</Link>
+                            <Link to="/ipo" onClick={closeMobileMenu} className="mobile-nav-link pl-4 border-l-2 border-transparent hover:border-blue-500">IPO</Link>
 
-                            <div className="border-t border-slate-200 dark:border-slate-800 my-2 pt-2">
-                                <Link to="/profile" onClick={closeMobileMenu} className="flex items-center gap-2 px-3 py-2 rounded-lg text-base font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800">
+                            <div className="font-semibold text-xs text-slate-400 uppercase tracking-wider mt-4 mb-2">Analysis</div>
+                            <Link to="/strategy" onClick={closeMobileMenu} className="mobile-nav-link pl-4 border-l-2 border-transparent hover:border-blue-500">Strategy</Link>
+                            <Link to="/charts" onClick={closeMobileMenu} className="mobile-nav-link pl-4 border-l-2 border-transparent hover:border-blue-500">Charts</Link>
+                            <Link to="/option-chain" onClick={closeMobileMenu} className="mobile-nav-link pl-4 border-l-2 border-transparent hover:border-blue-500">Option Chain</Link>
+                            <Link to="/scanner" onClick={closeMobileMenu} className="mobile-nav-link pl-4 border-l-2 border-transparent hover:border-blue-500">Scanner</Link>
+                            <Link to="/screener" onClick={closeMobileMenu} className="mobile-nav-link pl-4 border-l-2 border-transparent hover:border-blue-500">Screener</Link>
+                            <Link to="/iv-analysis" onClick={closeMobileMenu} className="mobile-nav-link pl-4 border-l-2 border-transparent hover:border-blue-500">IV Analysis</Link>
+
+                            <div className="font-semibold text-xs text-slate-400 uppercase tracking-wider mt-4 mb-2">Assets</div>
+                            <Link to="/currency" onClick={closeMobileMenu} className="mobile-nav-link pl-4 border-l-2 border-transparent hover:border-blue-500">Currency/Forex</Link>
+                            <Link to="/crypto" onClick={closeMobileMenu} className="mobile-nav-link pl-4 border-l-2 border-transparent hover:border-blue-500">Crypto</Link>
+                            <Link to="/commodity" onClick={closeMobileMenu} className="mobile-nav-link pl-4 border-l-2 border-transparent hover:border-blue-500">Commodity</Link>
+                            <Link to="/etf" onClick={closeMobileMenu} className="mobile-nav-link pl-4 border-l-2 border-transparent hover:border-blue-500">ETFs</Link>
+                            <Link to="/bond" onClick={closeMobileMenu} className="mobile-nav-link pl-4 border-l-2 border-transparent hover:border-blue-500">Bonds</Link>
+
+                            <div className="font-semibold text-xs text-slate-400 uppercase tracking-wider mt-4 mb-2">Tools</div>
+                            <Link to="/calculators" onClick={closeMobileMenu} className="mobile-nav-link pl-4 border-l-2 border-transparent hover:border-blue-500">Calculators</Link>
+                            <Link to="/daily-quiz" onClick={closeMobileMenu} className="mobile-nav-link pl-4 border-l-2 border-transparent hover:border-blue-500">Daily Quiz</Link>
+                            <Link to="/links" onClick={closeMobileMenu} className="mobile-nav-link pl-4 border-l-2 border-transparent hover:border-blue-500">All Links</Link>
+                            <Link to="/academy" onClick={closeMobileMenu} className="mobile-nav-link pl-4 border-l-2 border-transparent hover:border-blue-500">Academy</Link>
+
+                            <div className="font-semibold text-xs text-slate-400 uppercase tracking-wider mt-4 mb-2">Account</div>
+                            <Link to="/portfolio" onClick={closeMobileMenu} className="mobile-nav-link pl-4 border-l-2 border-transparent hover:border-blue-500">Portfolio</Link>
+                            <Link to="/watchlist" onClick={closeMobileMenu} className="mobile-nav-link pl-4 border-l-2 border-transparent hover:border-blue-500">Watchlist</Link>
+                            <Link to="/alerts" onClick={closeMobileMenu} className="mobile-nav-link pl-4 border-l-2 border-transparent hover:border-blue-500">Alerts</Link>
+                            <Link to="/community" onClick={closeMobileMenu} className="mobile-nav-link pl-4 border-l-2 border-transparent hover:border-blue-500">Community</Link>
+
+                            <div className="border-t border-slate-200 dark:border-slate-800 my-4 pt-4">
+                                <button
+                                    onClick={() => { setDonationModalOpen(true); closeMobileMenu(); }}
+                                    className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-base font-medium text-pink-600 dark:text-pink-400 hover:bg-pink-50 dark:hover:bg-pink-900/20 text-left mb-2"
+                                >
+                                    <Heart className="w-5 h-5 fill-pink-600 dark:fill-pink-400" /> Donate
+                                </button>
+                                <Link to="/profile" onClick={closeMobileMenu} className="flex items-center gap-2 px-3 py-2 rounded-lg text-base font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 mb-2">
                                     <User className="w-5 h-5" /> Profile
                                 </Link>
-                                <Link to="/settings" onClick={closeMobileMenu} className="flex items-center gap-2 px-3 py-2 rounded-lg text-base font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800">
-                                    <SettingsIcon className="w-5 h-5" /> Settings
-                                </Link>
-
                                 <button onClick={() => { handleSignOut(); closeMobileMenu(); }} className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-base font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 text-left">
                                     <LogOut className="w-5 h-5" /> Sign Out
                                 </button>
@@ -377,51 +292,15 @@ export default function Layout() {
                 )}
             </nav>
 
+            {/* Main Content Area */}
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow w-full">
                 <Breadcrumbs />
                 <Outlet />
             </main>
 
-
             <Footer />
 
-            {/* Floating User Menu - Desktop Only - Right Side */}
-            <div className="hidden lg:flex fixed top-20 right-6 z-40 flex-col gap-3">
-                <Link
-                    to="/profile"
-                    className="p-3 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 dark:hover:text-blue-400 rounded-full shadow-lg border border-slate-200 dark:border-slate-700 transition-all duration-300 hover:scale-110"
-                    title="Profile"
-                >
-                    <User className="w-5 h-5" />
-                </Link>
-                <Link
-                    to="/settings"
-                    className="p-3 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 dark:hover:text-blue-400 rounded-full shadow-lg border border-slate-200 dark:border-slate-700 transition-all duration-300 hover:scale-110"
-                    title="Settings"
-                >
-                    <SettingsIcon className="w-5 h-5" />
-                </Link>
 
-                <button
-                    onClick={handleSignOut}
-                    className="p-3 bg-white dark:bg-slate-800 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full shadow-lg border border-slate-200 dark:border-slate-700 transition-all duration-300 hover:scale-110"
-                    title="Sign Out"
-                >
-                    <LogOut className="w-5 h-5" />
-                </button>
-            </div>
-
-            {/* Floating Donate Button - Left Side - Above AI Assistant */}
-            <div className="hidden lg:flex fixed bottom-28 left-6 z-40">
-                <button
-                    onClick={() => setDonationModalOpen(true)}
-                    className="flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-pink-500 to-red-500 text-white rounded-full shadow-lg hover:from-pink-600 hover:to-red-600 transition-all duration-300 hover:scale-110"
-                    title="Support Us"
-                >
-                    <Heart className="w-5 h-5 fill-white" />
-                    <span className="font-semibold">Donate</span>
-                </button>
-            </div>
 
             <MarketPulse />
             <AIAssistant />

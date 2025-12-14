@@ -19,6 +19,9 @@ export default function Navigation({ onLoginClick }: NavigationProps) {
           </div>
           <div className="hidden md:flex gap-8">
 
+            <a href="/markets" className="text-slate-700 hover:text-blue-600 transition">Indian Markets</a>
+            <a href="/wallstreet" className="text-slate-700 hover:text-blue-600 transition">Wall Street</a>
+            <a href="/crypto" className="text-slate-700 hover:text-blue-600 transition">Crypto</a>
             <a href="#about" className="text-slate-700 hover:text-blue-600 transition">About</a>
             <a href="#contact" className="text-slate-700 hover:text-blue-600 transition">Contact</a>
           </div>

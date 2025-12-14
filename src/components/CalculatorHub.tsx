@@ -63,7 +63,7 @@ export default function CalculatorHub() {
             id: 6,
             title: 'Options Calculator',
             description: 'Greeks, breakeven, and profit/loss calculator for options strategies',
-            route: '/strategy-builder',
+            route: '/strategy',
             icon: PieChart,
             color: 'text-pink-600 dark:text-pink-400',
             bgColor: 'bg-pink-50 dark:bg-pink-900/20'

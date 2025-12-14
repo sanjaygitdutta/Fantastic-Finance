@@ -27,7 +27,7 @@ export const calculateMargin = (legs: StrategyLeg[], spotPrice: number): MarginR
     const LOT_SIZE = 50;
     const SPAN_PERCENT = 0.12; // 12% Span Margin
     const EXPOSURE_PERCENT = 0.03; // 3% Exposure Margin
-    const SHORT_OPTION_MIN_MARGIN = 80000; // Min margin per lot for naked short
+
 
     // 1. Calculate Net Premium (Cash flow)
     legs.forEach(leg => {

@@ -19,7 +19,24 @@ export const TWELVE_DATA_MAPPING: Record<string, string> = {
     'ETH': 'ETH/USD',
     'SOL': 'SOL/USD',
     'GOLD': 'XAU/USD',
-    'SILVER': 'XAG/USD'
+    'SILVER': 'XAG/USD',
+    // Extended Crypto
+    'XRP': 'XRP/USD',
+    'ADA': 'ADA/USD',
+    'DOGE': 'DOGE/USD',
+    'DOT': 'DOT/USD',
+    'UNI': 'UNI/USD',
+    'LINK': 'LINK/USD',
+    'BCH': 'BCH/USD',
+    // US Tech Titans
+    'AAPL': 'AAPL',
+    'MSFT': 'MSFT',
+    'GOOGL': 'GOOGL',
+    'AMZN': 'AMZN',
+    'TSLA': 'TSLA',
+    'META': 'META',
+    'NVDA': 'NVDA',
+    'VIX': 'VIX'
 };
 
 /**
