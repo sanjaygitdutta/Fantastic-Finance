@@ -101,6 +101,8 @@ export default function Footer() {
                 <div className="border-t border-slate-800 pt-8 text-center">
                     <p className="text-slate-500 text-sm mb-4 max-w-4xl mx-auto px-4">
                         Disclaimer: Fantastic Financial is an independent website and has no relation to any company, LLP, or entity with similar names. It is not an advisory firm; it is an education and analytics provider.
+                        <br /><br />
+                        Note: Market data is delayed by 15 minutes or as per exchange regulations.
                     </p>
                     <p className="text-slate-400 text-sm mb-2">
                         Made with <span className="text-red-500">❤️</span> by a Trader From Kolkata
