@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Newspaper, TrendingUp, Globe, Calendar, ExternalLink, RefreshCw, Search, AlertCircle, Tag, TrendingDown, Clock, Zap, DollarSign, Bitcoin } from 'lucide-react';
-import { InFeedAd } from './AdSense';
+import AdSlot from './AdSlot';
+import { TimelineWidget } from './TradingViewWidgets';
 
 interface NewsArticle {
     title: string;
@@ -224,6 +225,9 @@ export default function NewsRoom() {
                 </div>
             )}
 
+            {/* News Top Ad */}
+            <AdSlot slot="news-top-banner" format="horizontal" />
+
             {/* Header */}
             <div className="bg-gradient-to-r from-purple-600 to-indigo-600 p-6 rounded-2xl text-white shadow-lg">
                 <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
@@ -304,6 +308,9 @@ export default function NewsRoom() {
                                             src={featuredArticle.urlToImage}
                                             alt={featuredArticle.title}
                                             className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                                            onError={(e) => {
+                                                e.currentTarget.src = 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=400';
+                                            }}
                                         />
                                     </div>
                                     <div className="p-6 flex flex-col justify-center">
@@ -437,8 +444,19 @@ export default function NewsRoom() {
                             </div>
                         </div>
 
+                        {/* TradingView Real-time News */}
+                        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+                            <div className="p-4 border-b border-slate-100 bg-slate-50/50">
+                                <h3 className="font-bold text-slate-800 flex items-center gap-2 text-sm">
+                                    <Zap className="w-4 h-4 text-purple-600" />
+                                    Real-time Market Alerts
+                                </h3>
+                            </div>
+                            <TimelineWidget height="500px" />
+                        </div>
+
                         {/* AdSense In-Feed Ad */}
-                        <InFeedAd adSlot="1234567891" className="my-6" />
+                        <AdSlot slot="news-sidebar-bottom" format="rectangle" className="my-6" />
                     </div>
                 </div>
             )}

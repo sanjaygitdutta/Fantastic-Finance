@@ -1,4 +1,5 @@
 import { Bell, TrendingUp, AlertTriangle, Info, Clock, Plus, X } from 'lucide-react';
+import AdSlot from './AdSlot';
 import { useState } from 'react';
 import { DisplayAd } from './AdSense';
 
@@ -96,7 +97,7 @@ export default function AlertsCenter() {
             id: alerts.length + 1,
             type: newAlert.alertType,
             title: `${newAlert.symbol} Price Alert`,
-            message: `Alert will trigger when ${newAlert.symbol} goes ${newAlert.condition} ₹${price.toLocaleString()}`,
+            message: `Alert will trigger when ${newAlert.symbol} goes ${newAlert.condition} ₹${price.toLocaleString()} `,
             time: 'Just now',
             severity: 'info',
             read: false
@@ -158,10 +159,10 @@ export default function AlertsCenter() {
                     <button
                         key={f}
                         onClick={() => setFilter(f as any)}
-                        className={`px-4 py-2 rounded-full text-sm font-medium capitalize transition ${filter === f
-                            ? 'bg-blue-600 text-white shadow-md'
-                            : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700'
-                            }`}
+                        className={`px - 4 py - 2 rounded - full text - sm font - medium capitalize transition ${filter === f
+                                ? 'bg-blue-600 text-white shadow-md'
+                                : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700'
+                            } `}
                     >
                         {f}
                     </button>
@@ -180,15 +181,15 @@ export default function AlertsCenter() {
                         {filteredAlerts.map((alert) => (
                             <div
                                 key={alert.id}
-                                className={`p-6 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition flex gap-4 ${!alert.read ? 'bg-blue-50/30 dark:bg-blue-900/10' : ''
-                                    }`}
+                                className={`p - 6 hover: bg - slate - 50 dark: hover: bg - slate - 700 / 50 transition flex gap - 4 ${!alert.read ? 'bg-blue-50/30 dark:bg-blue-900/10' : ''
+                                    } `}
                             >
-                                <div className={`p-3 rounded-xl h-fit ${getColor(alert.type)}`}>
+                                <div className={`p - 3 rounded - xl h - fit ${getColor(alert.type)} `}>
                                     {getIcon(alert.type)}
                                 </div>
                                 <div className="flex-1">
                                     <div className="flex items-start justify-between mb-1">
-                                        <h3 className={`font-bold text-lg ${!alert.read ? 'text-slate-900 dark:text-white' : 'text-slate-700 dark:text-slate-300'}`}>
+                                        <h3 className={`font - bold text - lg ${!alert.read ? 'text-slate-900 dark:text-white' : 'text-slate-700 dark:text-slate-300'} `}>
                                             {alert.title}
                                         </h3>
                                         <span className="flex items-center gap-1 text-xs text-slate-500 whitespace-nowrap">
@@ -200,10 +201,10 @@ export default function AlertsCenter() {
                                         {alert.message}
                                     </p>
                                     <div className="flex items-center gap-3">
-                                        <span className={`px-2 py-0.5 rounded text-xs font-medium uppercase ${alert.severity === 'high' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
-                                            alert.severity === 'medium' ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400' :
-                                                'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
-                                            }`}>
+                                        <span className={`px - 2 py - 0.5 rounded text - xs font - medium uppercase ${alert.severity === 'high' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
+                                                alert.severity === 'medium' ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400' :
+                                                    'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                                            } `}>
                                             {alert.severity} priority
                                         </span>
                                         {!alert.read && (
@@ -306,6 +307,8 @@ export default function AlertsCenter() {
 
             {/* AdSense Display Ad */}
             <DisplayAd adSlot="1234567903" className="mt-6" />
+            {/* AdSense Display Ad */}
+            <AdSlot slot="alerts-center-bottom" format="horizontal" className="mt-8" />
         </div>
     );
 }

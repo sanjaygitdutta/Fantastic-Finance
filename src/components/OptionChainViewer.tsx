@@ -17,7 +17,7 @@ import {
 import { usePaperTrading } from '../context/PaperTradingContext';
 import PortfolioGreeks from './PortfolioGreeks';
 import PositionsBadge from './PositionsBadge';
-import { DisplayAd } from './AdSense';
+import AdSlot from './AdSlot';
 
 interface OptionData {
     strike: number;
@@ -161,6 +161,8 @@ export default function OptionChainViewer() {
 
     return (
         <div className="space-y-6">
+            {/* Option Chain Top Ad */}
+            <AdSlot slot="option-chain-top" format="horizontal" />
             <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-200 dark:border-slate-700">
                 <div className="flex flex-wrap items-center gap-4 mb-6">
                     <div className="flex items-center gap-3">
@@ -343,7 +345,7 @@ export default function OptionChainViewer() {
             }
 
             {/* AdSense Display Ad */}
-            <DisplayAd adSlot="1234567894" className="mt-6" />
+            <AdSlot slot="option-chain-bottom" format="horizontal" className="mt-6" />
         </div>
     );
 }

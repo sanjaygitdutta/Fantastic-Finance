@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Search, Filter, TrendingUp, TrendingDown, Download, Save, Zap, Target } from 'lucide-react';
-import { DisplayAd } from './AdSense';
+import { useNavigate } from 'react-router-dom';
+import AdSlot from './AdSlot';
+import { Search, Filter, ArrowUpRight, ArrowDownRight, RefreshCw, ChevronRight, BarChart3, Target } from 'lucide-react';
 
 interface Stock {
     symbol: string;
@@ -155,7 +156,7 @@ export default function StockScreener() {
                     {/* Presets */}
                     <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
                         <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2">
-                            <Zap className="w-5 h-5 text-yellow-600" />
+                            <BarChart3 className="w-5 h-5 text-yellow-600" />
                             Quick Presets
                         </h3>
                         <div className="space-y-2">
@@ -333,7 +334,7 @@ export default function StockScreener() {
                                     onClick={exportResults}
                                     className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium"
                                 >
-                                    <Download className="w-4 h-4" /> Export CSV
+                                    <RefreshCw className="w-4 h-4" /> Export CSV
                                 </button>
                             </div>
                         </div>
@@ -367,7 +368,7 @@ export default function StockScreener() {
                                             <td className="p-3 text-right font-medium text-slate-900">₹{stock.price.toLocaleString()}</td>
                                             <td className={`p-3 text-right font-bold ${stock.changePercent >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                                                 <div className="flex items-center justify-end gap-1">
-                                                    {stock.changePercent >= 0 ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
+                                                    {stock.changePercent >= 0 ? <ArrowUpRight className="w-4 h-4" /> : <ArrowDownRight className="w-4 h-4" />}
                                                     {stock.changePercent >= 0 ? '+' : ''}{stock.changePercent.toFixed(2)}%
                                                 </div>
                                             </td>
@@ -376,8 +377,8 @@ export default function StockScreener() {
                                             <td className="p-3 text-right text-slate-600">{stock.pe.toFixed(1)}</td>
                                             <td className="p-3 text-right">
                                                 <span className={`px-2 py-1 rounded-full text-xs font-semibold ${stock.rsi > 70 ? 'bg-red-100 text-red-700' :
-                                                    stock.rsi < 30 ? 'bg-green-100 text-green-700' :
-                                                        'bg-slate-100 text-slate-700'
+                                                        stock.rsi < 30 ? 'bg-green-100 text-green-700' :
+                                                            'bg-slate-100 text-slate-700'
                                                     }`}>
                                                     {stock.rsi}
                                                 </span>
@@ -403,7 +404,6 @@ export default function StockScreener() {
             </div>
 
             {/* AdSense Display Ad */}
-            <DisplayAd adSlot="1234567900" className="mt-6" />
         </div>
     );
 }

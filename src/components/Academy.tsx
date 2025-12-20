@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Search, BookOpen, TrendingUp, DollarSign, BarChart2, Globe, GraduationCap, PlayCircle, ArrowRight, Clock, Star } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { MultiplexAd } from './AdSense';
+import AdSlot from './AdSlot';
 
 export default function Academy() {
     const [searchQuery, setSearchQuery] = useState('');
@@ -265,7 +265,7 @@ export default function Academy() {
                 </div>
 
                 {/* AdSense Multiplex Ad */}
-                <MultiplexAd adSlot="1234567909" className="mt-6" />
+                <AdSlot slot="academy-bottom-multiplex" format="autorelaxed" className="mt-12" />
             </div>
         </div>
     );

@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { MessageSquare, Send, X, Bot, User, Sparkles, Loader2, Mic, MicOff } from 'lucide-react';
 import { useLivePrices } from '../context/LivePriceContext';
+import { useAuth } from '../hooks/useAuth';
 
 type Message = {
   id: number;
@@ -10,10 +11,11 @@ type Message = {
 };
 
 export default function AIAssistant() {
+  const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<Message[]>([
-    { id: 1, text: "Hello! I'm your Market AI. Ask me about stock prices, trends, or analysis.", sender: 'ai', timestamp: new Date() }
+    { id: 1, text: "Hello! I'm your Market AI. To start analyzing stocks and trends, please sign in.", sender: 'ai', timestamp: new Date() }
   ]);
   const [isTyping, setIsTyping] = useState(false);
   const [isListening, setIsListening] = useState(false);
@@ -205,12 +207,13 @@ export default function AIAssistant() {
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder={isListening ? "Listening..." : "Ask about a stock..."}
+              placeholder={!user ? "Please sign in to chat..." : (isListening ? "Listening..." : "Ask about a stock...")}
               className="flex-1 bg-slate-100 border-0 rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:bg-white transition"
+              disabled={!user || isListening}
             />
             <button
               type="submit"
-              disabled={!input.trim() || isTyping}
+              disabled={!user || !input.trim() || isTyping}
               className="bg-blue-600 text-white p-2 rounded-xl hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
             >
               <Send className="w-5 h-5" />

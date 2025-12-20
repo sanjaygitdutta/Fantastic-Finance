@@ -1,55 +1,69 @@
 import { Sparkles, TrendingUp, Shield, Zap, ArrowRight, Info } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
 
 interface Strategy {
     id: string;
     name: string;
+    symbol: string;
     type: 'bullish' | 'bearish' | 'neutral';
     description: string;
     riskLevel: 'low' | 'medium' | 'high';
     expectedReturn: string;
     marketCondition: string;
     instruments: string[];
+    spotPrice: number;
     icon: any;
     gradient: string;
 }
 
-export default function StrategyRecommendations() {
+interface StrategyRecommendationsProps {
+    onAuthRequired: () => void;
+}
+
+export default function StrategyRecommendations({ onAuthRequired }: StrategyRecommendationsProps) {
+    const { user } = useAuth(); // Assume we need auth check here or pass from parent
     // Mock AI-powered recommendations based on market conditions
     const recommendations: Strategy[] = [
         {
             id: '1',
             name: 'Bull Call Spread',
+            symbol: 'NIFTY 50',
             type: 'bullish',
             description: 'NIFTY showing strength above 24,500 with rising RSI',
             riskLevel: 'low',
             expectedReturn: '8-12%',
             marketCondition: 'Bullish breakout',
             instruments: ['NIFTY 24500 CE', 'NIFTY 24700 CE'],
+            spotPrice: 24500,
             icon: TrendingUp,
             gradient: 'from-green-500 to-emerald-600'
         },
         {
             id: '2',
             name: 'Iron Condor',
+            symbol: 'BANKNIFTY',
             type: 'neutral',
             description: 'BANKNIFTY consolidating near 53,000 zone',
             riskLevel: 'medium',
             expectedReturn: '5-8%',
             marketCondition: 'Range-bound volatility',
-            instruments: ['BANKNIFTY 52500 PE', 'BANKNIFTY 53500 CE'],
+            instruments: ['BANKNIFTY 52500 PE', 'BANKNIFTY 52800 PE', 'BANKNIFTY 53200 CE', 'BANKNIFTY 53500 CE'],
+            spotPrice: 53000,
             icon: Shield,
             gradient: 'from-blue-500 to-cyan-600'
         },
         {
             id: '3',
             name: 'Long Straddle',
+            symbol: 'NIFTY 50',
             type: 'neutral',
-            description: 'Expect volatility ahead of RBI Policy announcement',
+            description: 'Expect volatility ahead of high-impact economic news',
             riskLevel: 'high',
             expectedReturn: '15-25%',
-            marketCondition: 'High Volatility Event',
-            instruments: ['RELIANCE 2800 CE', 'RELIANCE 2800 PE'],
+            marketCondition: 'Volatility Expansion',
+            instruments: ['NIFTY 24500 CE', 'NIFTY 24500 PE'],
+            spotPrice: 24500,
             icon: Zap,
             gradient: 'from-purple-500 to-pink-600'
         }
@@ -129,9 +143,15 @@ export default function StrategyRecommendations() {
                                     </div>
 
                                     {/* Market Condition */}
-                                    <div className="flex items-center gap-2 mb-3 text-sm">
-                                        <span className="text-slate-500 dark:text-slate-400">Condition:</span>
-                                        <span className="font-medium text-slate-700 dark:text-slate-300">{strategy.marketCondition}</span>
+                                    <div className="flex items-center gap-4 mb-3 text-sm">
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-slate-500 dark:text-slate-400">Condition:</span>
+                                            <span className="font-medium text-slate-700 dark:text-slate-300">{strategy.marketCondition}</span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-slate-500 dark:text-slate-400">Symbol:</span>
+                                            <span className="font-bold text-blue-600 dark:text-blue-400">{strategy.symbol}</span>
+                                        </div>
                                     </div>
 
                                     {/* Metrics */}
@@ -160,42 +180,59 @@ export default function StrategyRecommendations() {
 
                                     {/* Actions */}
                                     <div className="flex gap-3">
-                                        <Link
-                                            to="/strategy"
-                                            state={{
-                                                strategyName: strategy.name,
-                                                legs: strategy.instruments.map((inst, i) => {
-                                                    // Simple parser for demo instruments like 'NIFTY 24500 CE'
-                                                    const parts = inst.split(' ');
-                                                    const strike = parseInt(parts[1]);
-                                                    const type = parts[2] as 'CE' | 'PE' ? (parts[2] === 'CE' ? 'CALL' : 'PUT') : 'CALL';
-                                                    // Infer action based on strategy type for demo simplicity
-                                                    // Real logic would need robust parsing or explicit data in strategy object
-                                                    let action: 'BUY' | 'SELL' = 'BUY';
-                                                    if (strategy.name === 'Iron Condor') {
-                                                        action = (i === 1 || i === 2) ? 'SELL' : 'BUY';
-                                                    } else if (strategy.name === 'Bull Call Spread') {
-                                                        action = i === 1 ? 'SELL' : 'BUY';
-                                                    }
+                                        {user ? (
+                                            <Link
+                                                to="/strategy"
+                                                state={{
+                                                    templateName: strategy.name,
+                                                    strategyName: `AI: ${strategy.name}`,
+                                                    symbol: strategy.symbol,
+                                                    spotPrice: strategy.spotPrice,
+                                                    legs: strategy.instruments.map((inst, i) => {
+                                                        // Simple parser for demo instruments like 'NIFTY 24500 CE'
+                                                        const parts = inst.split(' ');
+                                                        const strikeStr = parts.find(p => /^\d+$/.test(p));
+                                                        const strike = strikeStr ? parseInt(strikeStr) : strategy.spotPrice;
+                                                        const type = inst.includes('CE') ? 'CALL' : 'PUT';
 
-                                                    return {
-                                                        id: `auto-${i}`,
-                                                        type: type,
-                                                        action: action,
-                                                        strike: strike || 24500,
-                                                        premium: 100, // Mock premium
-                                                        quantity: 50,
-                                                        expiry: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] // 7 days from now
-                                                    };
-                                                })
-                                            }}
-                                            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg text-sm font-medium hover:from-purple-700 hover:to-pink-700 transition"
+                                                        // Action mapping for strategies
+                                                        let action: 'BUY' | 'SELL' = 'BUY';
+                                                        if (strategy.name === 'Iron Condor') {
+                                                            action = (i === 1 || i === 2) ? 'SELL' : 'BUY';
+                                                        } else if (strategy.name === 'Bull Call Spread') {
+                                                            action = i === 1 ? 'SELL' : 'BUY';
+                                                        }
+
+                                                        return {
+                                                            id: `auto-${strategy.id}-${i}`,
+                                                            type: type,
+                                                            action: action,
+                                                            strike: strike,
+                                                            premium: 100, // Mock premium
+                                                            quantity: strategy.symbol.includes('BANKNIFTY') ? 15 : 50, // Default lot sizes
+                                                            expiry: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+                                                        };
+                                                    })
+                                                }}
+                                                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg text-sm font-medium hover:from-purple-700 hover:to-pink-700 transition"
+                                            >
+                                                <Zap className="w-4 h-4" />
+                                                Deploy Strategy
+                                            </Link>
+                                        ) : (
+                                            <button
+                                                onClick={(e) => { e.preventDefault(); onAuthRequired(); }}
+                                                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg text-sm font-medium hover:from-purple-700 hover:to-pink-700 transition"
+                                            >
+                                                <Zap className="w-4 h-4" />
+                                                Deploy Strategy
+                                            </button>
+                                        )}
+                                        <button
+                                            onClick={(e) => { e.preventDefault(); onAuthRequired(); }}
+                                            className="px-4 py-2 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg text-sm font-medium hover:bg-slate-200 dark:hover:bg-slate-600 transition"
                                         >
-                                            <Zap className="w-4 h-4" />
-                                            Deploy Strategy
-                                        </Link>
-                                        <button className="px-4 py-2 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg text-sm font-medium hover:bg-slate-200 dark:hover:bg-slate-600 transition">
-                                            Learn More
+                                            Technical View
                                         </button>
                                     </div>
                                 </div>
@@ -209,12 +246,21 @@ export default function StrategyRecommendations() {
             </div>
 
             {/* View All Link */}
-            <Link
-                to="/strategy"
-                className="mt-4 flex items-center justify-center gap-2 text-purple-600 dark:text-purple-400 font-medium text-sm hover:underline"
-            >
-                View All Strategies <ArrowRight className="w-4 h-4" />
-            </Link>
+            {user ? (
+                <Link
+                    to="/strategy"
+                    className="mt-4 flex items-center justify-center gap-2 text-purple-600 dark:text-purple-400 font-medium text-sm hover:underline"
+                >
+                    Open Strategy Builder <ArrowRight className="w-4 h-4" />
+                </Link>
+            ) : (
+                <button
+                    onClick={() => onAuthRequired()}
+                    className="mt-4 w-full flex items-center justify-center gap-2 text-purple-600 dark:text-purple-400 font-medium text-sm hover:underline"
+                >
+                    Open Strategy Builder <ArrowRight className="w-4 h-4" />
+                </button>
+            )}
         </div>
     );
 }

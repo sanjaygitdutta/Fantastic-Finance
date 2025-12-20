@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { TrendingUp, TrendingDown, Minus, Activity, Zap, Target, Clock, Shield, ArrowRight, Check, LineChart } from 'lucide-react';
+import { Search, Filter, Play, CheckCircle2, ChevronRight, Wand2, Target, Zap, TrendingUp, TrendingDown, Minus, Activity, Check, ArrowRight, Clock, Shield, LineChart } from 'lucide-react';
+import AdSlot from './AdSlot';
 import { Link, useNavigate } from 'react-router-dom';
 
 type Outlook = 'bullish' | 'bearish' | 'neutral' | 'volatile' | 'rangebound';
@@ -227,8 +228,8 @@ export default function StrategyWizard() {
                     {[1, 2, 3, 4].map((s) => (
                         <div key={s} className="flex items-center">
                             <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold transition ${step >= s
-                                    ? 'bg-blue-600 text-white'
-                                    : 'bg-slate-200 dark:bg-slate-700 text-slate-500'
+                                ? 'bg-blue-600 text-white'
+                                : 'bg-slate-200 dark:bg-slate-700 text-slate-500'
                                 }`}>
                                 {step > s ? <Check className="w-5 h-5" /> : s}
                             </div>
@@ -248,8 +249,8 @@ export default function StrategyWizard() {
                                         key={o.id}
                                         onClick={() => setOutlook(o.id)}
                                         className={`p-6 rounded-xl border-2 transition text-left ${outlook === o.id
-                                                ? `border-${o.color}-500 bg-${o.color}-50 dark:bg-${o.color}-900/20`
-                                                : 'border-slate-200 dark:border-slate-700 hover:border-slate-300'
+                                            ? `border-${o.color}-500 bg-${o.color}-50 dark:bg-${o.color}-900/20`
+                                            : 'border-slate-200 dark:border-slate-700 hover:border-slate-300'
                                             }`}
                                     >
                                         <o.icon className={`w-8 h-8 text-${o.color}-600 mb-3`} />
@@ -330,8 +331,8 @@ export default function StrategyWizard() {
                                             key={t}
                                             onClick={() => setTimeHorizon(t as TimeHorizon)}
                                             className={`p-4 rounded-lg border-2 transition ${timeHorizon === t
-                                                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                                                    : 'border-slate-200 dark:border-slate-700'
+                                                ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                                                : 'border-slate-200 dark:border-slate-700'
                                                 }`}
                                         >
                                             <div className="font-bold text-slate-900 dark:text-white capitalize">{t}</div>
@@ -355,8 +356,8 @@ export default function StrategyWizard() {
                                             key={r}
                                             onClick={() => setRiskLevel(r as RiskLevel)}
                                             className={`p-4 rounded-lg border-2 transition ${riskLevel === r
-                                                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                                                    : 'border-slate-200 dark:border-slate-700'
+                                                ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                                                : 'border-slate-200 dark:border-slate-700'
                                                 }`}
                                         >
                                             <div className="font-bold text-slate-900 dark:text-white capitalize">{r}</div>
@@ -404,8 +405,8 @@ export default function StrategyWizard() {
                                             </div>
                                             <div className="flex items-center gap-2">
                                                 <span className={`px-3 py-1 rounded-full text-xs font-medium ${strategy.complexity === 'Easy' ? 'bg-green-100 text-green-700' :
-                                                        strategy.complexity === 'Medium' ? 'bg-yellow-100 text-yellow-700' :
-                                                            'bg-red-100 text-red-700'
+                                                    strategy.complexity === 'Medium' ? 'bg-yellow-100 text-yellow-700' :
+                                                        'bg-red-100 text-red-700'
                                                     }`}>
                                                     {strategy.complexity}
                                                 </span>
@@ -457,6 +458,8 @@ export default function StrategyWizard() {
                     )}
                 </div>
             </div>
+            {/* AdSense Display Ad */}
+            <AdSlot slot="strategy-wizard-bottom" format="horizontal" className="mt-8" />
         </div>
     );
 }

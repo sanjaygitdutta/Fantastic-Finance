@@ -11,7 +11,7 @@ import {
     StrikeIVData
 } from '../utils/ivCalculations';
 import { getMoneyness } from '../utils/greeksCalculations';
-import { DisplayAd } from './AdSense';
+import AdSlot from './AdSlot';
 
 export default function IVAnalysis() {
     const [symbol, setSymbol] = useState('NSE_INDEX|Nifty 50');
@@ -146,6 +146,8 @@ export default function IVAnalysis() {
 
     return (
         <div className="space-y-6">
+            {/* IV Analysis Top Ad */}
+            <AdSlot slot="iv-analysis-top" format="horizontal" />
             {/* Header */}
             <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-200 dark:border-slate-700">
                 <div className="flex flex-wrap items-center gap-4">
@@ -461,7 +463,7 @@ export default function IVAnalysis() {
             )}
 
             {/* AdSense Display Ad */}
-            <DisplayAd adSlot="1234567895" className="mt-6" />
+            <AdSlot slot="iv-analysis-bottom" format="horizontal" className="mt-6" />
         </div>
     );
 }

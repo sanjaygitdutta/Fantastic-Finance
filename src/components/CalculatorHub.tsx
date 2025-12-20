@@ -1,4 +1,5 @@
-import { Calculator, TrendingUp, BarChart3, PieChart, DollarSign, Activity, ArrowRight } from 'lucide-react';
+import { Calculator, TrendingUp, BarChart3, PieChart, DollarSign, Activity, ArrowRight, Percent, Shield, HelpCircle, Zap, Target } from 'lucide-react';
+import AdSlot from './AdSlot';
 import { Link } from 'react-router-dom';
 import { DisplayAd } from './AdSense';
 
@@ -96,11 +97,11 @@ export default function CalculatorHub() {
                                 to={tool.route}
                                 className="group bg-white dark:bg-slate-800 rounded-xl p-6 shadow-sm border border-slate-200 dark:border-slate-700 hover:shadow-lg hover:border-blue-300 dark:hover:border-blue-600 transition"
                             >
-                                <div className={`w-14 h-14 ${tool.bgColor} rounded-lg flex items-center justify-center mb-4`}>
-                                    <Icon className={`w-7 h-7 ${tool.color}`} />
+                                <div className={`w - 14 h - 14 ${tool.bgColor} rounded - lg flex items - center justify - center mb - 4`}>
+                                    <Icon className={`w - 7 h - 7 ${tool.color} `} />
                                 </div>
 
-                                <h3 className={`text-xl font-bold text-slate-900 dark:text-white mb-2 group-hover:${tool.color} transition`}>
+                                <h3 className={`text - xl font - bold text - slate - 900 dark: text - white mb - 2 group - hover:${tool.color} transition`}>
                                     {tool.title}
                                 </h3>
 
@@ -158,6 +159,8 @@ export default function CalculatorHub() {
 
             {/* AdSense Display Ad */}
             <DisplayAd adSlot="1234567907" className="mt-6" />
+            {/* AdSense Display Ad */}
+            <AdSlot slot="calculator-hub-bottom" format="horizontal" className="mt-8" />
         </div>
     );
 }

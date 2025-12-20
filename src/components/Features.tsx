@@ -1,47 +1,47 @@
-import { BarChart3, TrendingUp, Zap, GraduationCap, Users, Activity } from 'lucide-react';
+import { BarChart3, Calculator, Zap, GraduationCap, Users, Activity } from 'lucide-react';
 
 export default function Features() {
     const features = [
         {
-            icon: BarChart3,
-            title: 'Visual Strategy Builder',
-            description: 'Don\'t just trade, strategize. Build and visualize multi-leg strategies like Iron Condors with real-time P/L payoff charts.',
-            badge: '15+ Pre-built Strategies',
+            icon: Calculator,
+            title: 'Black-Scholes Analytics',
+            description: 'Determine the theoretical value of options using the industry-standard Black-Scholes model. Access real-time IV and Greeks calculation with professional precision.',
+            badge: 'Institutional Grade',
             color: 'blue'
         },
         {
-            icon: TrendingUp,
-            title: 'Advanced Charting Suite',
-            description: 'Analyze market trends with precision. Access professional-grade technical indicators and multi-timeframe analysis tools.',
-            badge: 'Pro Charts',
+            icon: Activity,
+            title: 'Greeks & IV Surface',
+            description: 'Go beyond simple charts. Visualize Delta, Gamma, and Theta decay. Analyze the IV surface to find mispriced options and edge in the market.',
+            badge: 'Pro Analysis',
             color: 'purple'
         },
         {
-            icon: Activity,
-            title: 'AI-Driven Analytics',
-            description: 'Leverage machine learning to identify trends. Access Black-Scholes valuations, PCR analysis, and volatility heatmaps.',
-            badge: 'Smart Signals',
+            icon: Zap,
+            title: 'Margin & Risk Forecast',
+            description: 'Know your capital requirements exactly. Use our advanced margin calculator to forecast requirements for multi-leg option strategies before you trade.',
+            badge: 'Risk Control',
             color: 'pink'
         },
         {
-            icon: Zap,
-            title: 'Risk-Free Paper Trading',
-            description: 'Test before you invest. Deploy strategies with ₹10 Lakhs virtual capital in a realistic market simulation.',
-            badge: 'Virtual ₹10,00,000',
+            icon: BarChart3,
+            title: 'Visual Strategy Builder',
+            description: 'Design and visualize multi-leg strategies like Iron Condors and Butterfly Spreads with real-time P/L payoff charts and probability of profit.',
+            badge: '15+ Templates',
             color: 'green'
         },
         {
             icon: GraduationCap,
-            title: 'Pro Trading Academy',
-            description: 'Level up your skills. From options basics to advanced Greek management, master the market with our expert curriculum.',
-            badge: '50+ Lessons',
+            title: 'Option Greek Academy',
+            description: 'Master the "language of options". From volatility smiles to time decay management, learn how professionals manage institutional portfolios.',
+            badge: 'Advanced Learning',
             color: 'orange'
         },
         {
             icon: Users,
-            title: 'Elite Trader Community',
-            description: 'Never trade alone. Connect with top performers, copy successful strategies, and share your market insights.',
-            badge: 'Active Community',
+            title: 'Elite Alpha Community',
+            description: 'Connect with a network of high-net-worth traders. Share logic-based trade setups, backtest results, and collaborative market research.',
+            badge: 'Expert Network',
             color: 'indigo'
         }
     ];

@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Users, TrendingUp, Copy, UserPlus, Award, BarChart3, Eye, Star } from 'lucide-react';
+import { Users, TrendingUp, Star, MessageSquare, Share2, Award, Zap, BarChart3, Target } from 'lucide-react';
+import AdSlot from './AdSlot';
 
 interface Trader {
     id: string;
@@ -153,8 +154,8 @@ export default function SocialTrading() {
                                             )}
                                             {idx < 3 && (
                                                 <div className={`absolute -top-2 -left-2 w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs ${idx === 0 ? 'bg-yellow-400 text-yellow-900' :
-                                                        idx === 1 ? 'bg-slate-300 text-slate-700' :
-                                                            'bg-orange-400 text-orange-900'
+                                                    idx === 1 ? 'bg-slate-300 text-slate-700' :
+                                                        'bg-orange-400 text-orange-900'
                                                     }`}>
                                                     #{idx + 1}
                                                 </div>
@@ -201,8 +202,8 @@ export default function SocialTrading() {
                                                 <button
                                                     onClick={() => toggleFollow(trader.id)}
                                                     className={`flex-1 px-4 py-2 rounded-lg font-medium transition flex items-center justify-center gap-2 ${following.includes(trader.id)
-                                                            ? 'bg-purple-100 text-purple-700 hover:bg-purple-200'
-                                                            : 'bg-purple-600 text-white hover:bg-purple-700'
+                                                        ? 'bg-purple-100 text-purple-700 hover:bg-purple-200'
+                                                        : 'bg-purple-600 text-white hover:bg-purple-700'
                                                         }`}
                                                 >
                                                     {following.includes(trader.id) ? (
@@ -220,8 +221,8 @@ export default function SocialTrading() {
                                                     <button
                                                         onClick={() => toggleAutoCopy(trader.id)}
                                                         className={`flex-1 px-4 py-2 rounded-lg font-medium transition flex items-center justify-center gap-2 ${autoCopyEnabled[trader.id]
-                                                                ? 'bg-green-100 text-green-700 hover:bg-green-200'
-                                                                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                                            ? 'bg-green-100 text-green-700 hover:bg-green-200'
+                                                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                                                             }`}
                                                     >
                                                         <Copy className="w-4 h-4" />
@@ -290,6 +291,8 @@ export default function SocialTrading() {
                     </div>
                 </div>
             </div>
+            {/* AdSense Display Ad */}
+            <AdSlot slot="social-trading-bottom" format="horizontal" className="mt-8" />
         </div>
     );
 }

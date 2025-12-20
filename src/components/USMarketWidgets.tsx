@@ -1,5 +1,5 @@
 import { useEffect, useRef, memo, useState } from 'react';
-import { Clock, TrendingUp, TrendingDown, AlertTriangle, Zap, Calendar, Activity, BarChart2 } from 'lucide-react';
+import { Clock, TrendingUp, TrendingDown, AlertTriangle, Zap, Calendar, Activity, BarChart2, Globe } from 'lucide-react';
 import { useLivePrices } from '../context/LivePriceContext';
 
 // --- 1. US Market Status ---
@@ -161,7 +161,7 @@ export const EconomicCalendarWidget = memo(() => {
                 <h3 className="font-bold text-slate-800">Economic Calendar</h3>
             </div>
             <TVWidget
-                height="500px"
+                height="600px"
                 scriptHTML={{
                     src: "https://s3.tradingview.com/external-embedding/embed-widget-events.js",
                     innerHTML: JSON.stringify({
@@ -189,7 +189,7 @@ export const SectorHeatmapWidget = memo(() => {
                 <h3 className="font-bold text-slate-800">S&P 500 Sector Heatmap</h3>
             </div>
             <TVWidget
-                height="500px"
+                height="700px"
                 scriptHTML={{
                     src: "https://s3.tradingview.com/external-embedding/embed-widget-stock-heatmap.js",
                     innerHTML: JSON.stringify({
@@ -221,7 +221,7 @@ export const MostActiveOptionsWidget = memo(() => {
                 <h3 className="font-bold text-slate-800">Most Active Options (High Impact)</h3>
             </div>
             <TVWidget
-                height="400px"
+                height="500px"
                 scriptHTML={{
                     src: "https://s3.tradingview.com/external-embedding/embed-widget-market-quotes.js",
                     innerHTML: JSON.stringify({
@@ -264,7 +264,7 @@ export const VIXGauge = memo(() => {
                 <h3 className="font-bold text-slate-800">Volatility Index (VIX)</h3>
             </div>
             <TVWidget
-                height="300px"
+                height="400px"
                 scriptHTML={{
                     src: "https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js",
                     innerHTML: JSON.stringify({
@@ -293,7 +293,7 @@ export const BondYieldMonitor = memo(() => {
                 <h3 className="font-bold text-slate-800">US Treasury Yields (Smart Money)</h3>
             </div>
             <TVWidget
-                height="300px"
+                height="450px"
                 scriptHTML={{
                     src: "https://s3.tradingview.com/external-embedding/embed-widget-market-quotes.js",
                     innerHTML: JSON.stringify({
@@ -334,7 +334,7 @@ export const FedRateMonitor = memo(() => {
                 <h3 className="font-bold text-slate-800">Effective Fed Funds Rate</h3>
             </div>
             <TVWidget
-                height="300px"
+                height="400px"
                 scriptHTML={{
                     src: "https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js",
                     innerHTML: JSON.stringify({
@@ -353,3 +353,106 @@ export const FedRateMonitor = memo(() => {
         </div>
     );
 });
+
+// --- 10. Real-time US Indices ---
+export const USIndicesMarketWidget = memo(() => (
+    <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div className="p-4 border-b border-slate-200 flex items-center gap-2">
+            <Globe className="w-5 h-5 text-blue-600" />
+            <h3 className="font-bold text-slate-800">Major US Indices</h3>
+        </div>
+        <TVWidget
+            height="500px"
+            scriptHTML={{
+                src: "https://s3.tradingview.com/external-embedding/embed-widget-market-quotes.js",
+                innerHTML: JSON.stringify({
+                    "width": "100%",
+                    "height": "100%",
+                    "symbolsGroups": [
+                        {
+                            "name": "Indices",
+                            "originalName": "Indices",
+                            "symbols": [
+                                { "name": "FOREXCOM:SPXUSD", "displayName": "S&P 500" },
+                                { "name": "FOREXCOM:NSXUSD", "displayName": "Nasdaq 100" },
+                                { "name": "FOREXCOM:DJI", "displayName": "Dow 30" },
+                                { "name": "FOREXCOM:RUT", "displayName": "Russell 2000" }
+                            ]
+                        }
+                    ],
+                    "showSymbolLogo": true,
+                    "colorTheme": "light",
+                    "isTransparent": false,
+                    "locale": "en"
+                })
+            }}
+        />
+    </div>
+));
+
+// --- 11. Real-time Tech Titans ---
+export const TechTitansMarketWidget = memo(() => (
+    <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div className="p-4 border-b border-slate-200 flex items-center gap-2">
+            <Zap className="w-5 h-5 text-amber-500" />
+            <h3 className="font-bold text-slate-800">Tech Titans</h3>
+        </div>
+        <TVWidget
+            height="650px"
+            scriptHTML={{
+                src: "https://s3.tradingview.com/external-embedding/embed-widget-market-quotes.js",
+                innerHTML: JSON.stringify({
+                    "width": "100%",
+                    "height": "100%",
+                    "symbolsGroups": [
+                        {
+                            "name": "Technology Leaders",
+                            "symbols": [
+                                { "name": "NASDAQ:AAPL", "displayName": "Apple" },
+                                { "name": "NASDAQ:MSFT", "displayName": "Microsoft" },
+                                { "name": "NASDAQ:GOOGL", "displayName": "Alphabet" },
+                                { "name": "NASDAQ:AMZN", "displayName": "Amazon" },
+                                { "name": "NASDAQ:TSLA", "displayName": "Tesla" },
+                                { "name": "NASDAQ:META", "displayName": "Meta" },
+                                { "name": "NASDAQ:NVDA", "displayName": "NVIDIA" }
+                            ]
+                        }
+                    ],
+                    "showSymbolLogo": true,
+                    "colorTheme": "light",
+                    "isTransparent": false,
+                    "locale": "en"
+                })
+            }}
+        />
+    </div>
+));
+
+// --- 12. US Advanced Chart Station ---
+export const USAdvancedChartWidget = memo(({ symbol = "FOREXCOM:SPXUSD", height = "850px" }: { symbol?: string, height?: string }) => (
+    <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div className="p-4 border-b border-slate-200 flex items-center gap-2">
+            <BarChart2 className="w-5 h-5 text-purple-600" />
+            <h3 className="font-bold text-slate-800">US Market Advanced Charting</h3>
+        </div>
+        <TVWidget
+            height={height}
+            scriptHTML={{
+                src: "https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js",
+                innerHTML: JSON.stringify({
+                    "width": "100%",
+                    "height": "850",
+                    "symbol": symbol,
+                    "interval": "D",
+                    "timezone": "Etc/UTC",
+                    "theme": "light",
+                    "style": "1",
+                    "locale": "en",
+                    "enable_publishing": false,
+                    "allow_symbol_change": true,
+                    "container_id": "tradingview_us_advanced_chart"
+                })
+            }}
+        />
+    </div>
+));

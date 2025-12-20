@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Brain, CheckCircle, XCircle, Trophy } from 'lucide-react';
-import { DisplayAd } from './AdSense';
+import AdSlot from './AdSlot';
 
 interface QuizQuestion {
     id: number;
@@ -276,7 +276,7 @@ export default function DailyQuiz() {
             </div>
 
             {/* AdSense Display Ad */}
-            <DisplayAd adSlot="1234567908" className="mt-6" />
+            <AdSlot slot="quiz-bottom" format="horizontal" className="mt-6" />
         </div>
     );
 }

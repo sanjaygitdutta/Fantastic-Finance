@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useLocation, Outlet } from 'react-router-dom';
 import {
     TrendingUp, Globe, Newspaper, Zap, BarChart2, Activity, Filter,
-    GraduationCap, Heart, User, LogOut, Menu, X,
+    GraduationCap, Heart, User, LogOut, Menu, X, Search,
     Star, Briefcase, Bell, Calendar, Link as LinkIcon, Calculator, Brain,
     Shield, ChevronDown, Monitor, PieChart, DollarSign, Layers, Settings
 } from 'lucide-react';
@@ -13,11 +13,26 @@ import FloatingActions from './FloatingActions';
 import DonationModal from './DonationModal';
 import Footer from './Footer';
 import Breadcrumbs from './Breadcrumbs';
+import AdSlot from './AdSlot';
+import GlobalSearch from './GlobalSearch';
 
 export default function Layout() {
     const location = useLocation();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [donationModalOpen, setDonationModalOpen] = useState(false);
+    const [searchOpen, setSearchOpen] = useState(false);
+
+    // Keyboard shortcut for search (Ctrl+K or Cmd+K)
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+                e.preventDefault();
+                setSearchOpen(true);
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, []);
 
     const handleSignOut = async () => {
         try {
@@ -215,8 +230,15 @@ export default function Layout() {
                         <div className="hidden lg:flex items-center gap-4">
                             <div className="flex items-center gap-3">
                                 <button
+                                    onClick={() => setSearchOpen(true)}
+                                    className="hidden lg:flex items-center justify-center w-9 h-9 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition shadow-sm"
+                                    title="Search (Ctrl+K)"
+                                >
+                                    <Search className="w-5 h-5" />
+                                </button>
+                                <button
                                     onClick={() => setDonationModalOpen(true)}
-                                    className="hidden lg:flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-pink-500 to-red-500 text-white rounded-full text-sm font-medium hover:from-pink-600 hover:to-red-600 transition shadow-sm mr-2"
+                                    className="hidden lg:flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-pink-500 to-red-500 text-white rounded-full text-sm font-medium hover:from-pink-600 hover:to-red-600 transition shadow-sm"
                                 >
                                     <Heart className="w-4 h-4 fill-white" /> Donate
                                 </button>
@@ -296,6 +318,9 @@ export default function Layout() {
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow w-full">
                 <Breadcrumbs />
                 <Outlet />
+
+                {/* Bottom Main Content Ad */}
+                <AdSlot slot="main-content-bottom" format="horizontal" className="mt-8" />
             </main>
 
             <Footer />
@@ -306,6 +331,7 @@ export default function Layout() {
             <AIAssistant />
             <FloatingActions />
             <DonationModal isOpen={donationModalOpen} onClose={() => setDonationModalOpen(false)} />
+            <GlobalSearch isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
         </div>
     );
 }

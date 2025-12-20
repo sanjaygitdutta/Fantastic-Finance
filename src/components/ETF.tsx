@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { TrendingUp, TrendingDown, Search, Filter, BarChart3, DollarSign, Globe } from 'lucide-react';
-import { DisplayAd } from './AdSense';
+import { PieChart, Search, ArrowRight, TrendingUp, TrendingDown } from 'lucide-react';
+import AdSlot from './AdSlot';
 
 interface ETFData {
     symbol: string;
@@ -42,7 +42,7 @@ export default function ETF() {
             <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-200 dark:border-slate-700">
                 <div className="flex items-center gap-3 mb-4">
                     <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl flex items-center justify-center">
-                        <BarChart3 className="w-6 h-6 text-white" />
+                        <PieChart className="w-6 h-6 text-white" />
                     </div>
                     <div>
                         <h1 className="text-3xl font-bold text-slate-900 dark:text-white">ETF Market</h1>
@@ -68,8 +68,8 @@ export default function ETF() {
                                 key={cat}
                                 onClick={() => setFilterCategory(cat)}
                                 className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition ${filterCategory === cat
-                                        ? 'bg-blue-600 text-white shadow-md'
-                                        : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
+                                    ? 'bg-blue-600 text-white shadow-md'
+                                    : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
                                     }`}
                             >
                                 {cat}
@@ -119,7 +119,7 @@ export default function ETF() {
             {/* Info Box */}
             <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-6">
                 <div className="flex items-start gap-3">
-                    <Globe className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+                    <ArrowRight className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
                     <div>
                         <h4 className="font-semibold text-blue-900 dark:text-blue-300 mb-2">About ETFs</h4>
                         <p className="text-sm text-blue-800 dark:text-blue-400">
@@ -131,7 +131,7 @@ export default function ETF() {
             </div>
 
             {/* AdSense Display Ad */}
-            <DisplayAd adSlot="1234567910" className="mt-6" />
+            <AdSlot slot="etf-bottom" format="horizontal" className="mt-8 opacity-80" />
         </div>
     );
 }

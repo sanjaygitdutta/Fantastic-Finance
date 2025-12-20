@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { Activity, TrendingUp, DollarSign, Zap, Globe, BarChart2 } from 'lucide-react';
-import { DisplayAd } from './AdSense';
+import { Activity, BarChart2, DollarSign, Globe } from 'lucide-react';
+import AdSlot from './AdSlot';
 
 // Technical Analysis Widget
 function TechnicalAnalysisWidget({ symbol }: { symbol: string }) {
@@ -220,7 +220,7 @@ export default function TechnicalAnalysis() {
             </div>
 
             {/* AdSense Display Ad */}
-            <DisplayAd adSlot="1234567897" className="mt-6" />
+            <AdSlot slot="technical-analysis-summary" format="horizontal" className="mt-6" />
         </div>
     );
 }

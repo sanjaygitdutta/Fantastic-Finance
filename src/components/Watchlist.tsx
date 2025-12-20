@@ -1,6 +1,6 @@
 import { Star, TrendingUp, TrendingDown, Plus, Search, Filter, X, Trash2 } from 'lucide-react';
+import AdSlot from './AdSlot';
 import { useState } from 'react';
-import { DisplayAd } from './AdSense';
 
 interface Stock {
     symbol: string;
@@ -60,7 +60,7 @@ export default function Watchlist() {
     };
 
     const handleRemoveSymbol = (symbol: string) => {
-        if (confirm(`Remove ${symbol} from watchlist?`)) {
+        if (confirm(`Remove ${symbol} from watchlist ? `)) {
             setWatchlist(watchlist.filter(stock => stock.symbol !== symbol));
         }
     };
@@ -139,13 +139,13 @@ export default function Watchlist() {
                                         <td className="px-6 py-4 text-slate-600 dark:text-slate-400">{stock.name}</td>
                                         <td className="px-6 py-4 text-right font-semibold text-slate-900 dark:text-white">₹{stock.price.toLocaleString()}</td>
                                         <td className="px-6 py-4 text-right">
-                                            <div className={`flex items-center justify-end gap-1 ${stock.change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                            <div className={`flex items - center justify - end gap - 1 ${stock.change >= 0 ? 'text-green-600' : 'text-red-600'} `}>
                                                 {stock.change >= 0 ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
                                                 <span className="font-semibold">{stock.change >= 0 ? '+' : ''}{stock.change.toFixed(2)}</span>
                                             </div>
                                         </td>
                                         <td className="px-6 py-4 text-right">
-                                            <span className={`font-semibold ${stock.changePercent >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                            <span className={`font - semibold ${stock.changePercent >= 0 ? 'text-green-600' : 'text-red-600'} `}>
                                                 {stock.changePercent >= 0 ? '+' : ''}{stock.changePercent.toFixed(2)}%
                                             </span>
                                         </td>
@@ -256,7 +256,9 @@ export default function Watchlist() {
             )}
 
             {/* AdSense Display Ad */}
-            <DisplayAd adSlot="1234567901" className="mt-6" />
+            <AdSlot slot="watchlist-summary" format="horizontal" className="mt-6" />
+            {/* AdSense Display Ad */}
+            <AdSlot slot="watchlist-bottom" format="horizontal" className="mt-8" />
         </div>
     );
 }

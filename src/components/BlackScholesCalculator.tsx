@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Calculator, TrendingUp, TrendingDown, Minus, Info, DollarSign } from 'lucide-react';
+import { Info, Calculator, TrendingUp, TrendingDown, Target, Zap, BarChart3, HelpCircle, DollarSign, Minus } from 'lucide-react';
+import AdSlot from './AdSlot';
 import { useAnalytics } from '../hooks/useAnalytics';
 
 interface BSInputs {
@@ -168,19 +169,19 @@ export default function BlackScholesCalculator() {
                             <div className="grid grid-cols-2 gap-3">
                                 <button
                                     onClick={() => handleInputChange('optionType', 'call')}
-                                    className={`px-4 py-3 rounded-lg font-medium transition ${inputs.optionType === 'call'
+                                    className={`px - 4 py - 3 rounded - lg font - medium transition ${inputs.optionType === 'call'
                                         ? 'bg-blue-600 text-white shadow-lg'
                                         : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
-                                        }`}
+                                        } `}
                                 >
                                     Call Option
                                 </button>
                                 <button
                                     onClick={() => handleInputChange('optionType', 'put')}
-                                    className={`px-4 py-3 rounded-lg font-medium transition ${inputs.optionType === 'put'
+                                    className={`px - 4 py - 3 rounded - lg font - medium transition ${inputs.optionType === 'put'
                                         ? 'bg-blue-600 text-white shadow-lg'
                                         : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
-                                        }`}
+                                        } `}
                                 >
                                     Put Option
                                 </button>
@@ -359,7 +360,7 @@ export default function BlackScholesCalculator() {
                     {result && (
                         <>
                             {/* Valuation Status Card */}
-                            <div className={`bg-gradient-to-br from-${getValuationColor()}-500 to-${getValuationColor()}-700 rounded-xl p-6 text-white shadow-xl`}>
+                            <div className={`bg - gradient - to - br from - ${getValuationColor()} -500 to - ${getValuationColor()} -700 rounded - xl p - 6 text - white shadow - xl`}>
                                 <div className="flex items-center justify-between mb-4">
                                     <h3 className="text-lg font-semibold">Valuation Status</h3>
                                     {getValuationIcon()}
@@ -387,36 +388,36 @@ export default function BlackScholesCalculator() {
                                         <span className="text-xl font-bold text-slate-900 dark:text-white">₹{result.theoreticalPrice.toFixed(2)}</span>
                                     </div>
 
-                                    <div className={`flex justify-between items-center p-4 rounded-lg ${result.valuation === 'undervalued'
+                                    <div className={`flex justify - between items - center p - 4 rounded - lg ${result.valuation === 'undervalued'
                                         ? 'bg-green-50 dark:bg-green-900/20'
                                         : result.valuation === 'overvalued'
                                             ? 'bg-red-50 dark:bg-red-900/20'
                                             : 'bg-slate-50 dark:bg-slate-700'
-                                        }`}>
+                                        } `}>
                                         <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Price Difference</span>
-                                        <span className={`text-xl font-bold ${result.valuation === 'undervalued'
+                                        <span className={`text - xl font - bold ${result.valuation === 'undervalued'
                                             ? 'text-green-600 dark:text-green-400'
                                             : result.valuation === 'overvalued'
                                                 ? 'text-red-600 dark:text-red-400'
                                                 : 'text-slate-900 dark:text-white'
-                                            }`}>
+                                            } `}>
                                             {result.priceDifference > 0 ? '+' : ''}₹{result.priceDifference.toFixed(2)}
                                         </span>
                                     </div>
 
-                                    <div className={`flex justify-between items-center p-4 rounded-lg ${result.valuation === 'undervalued'
+                                    <div className={`flex justify - between items - center p - 4 rounded - lg ${result.valuation === 'undervalued'
                                         ? 'bg-green-50 dark:bg-green-900/20'
                                         : result.valuation === 'overvalued'
                                             ? 'bg-red-50 dark:bg-red-900/20'
                                             : 'bg-slate-50 dark:bg-slate-700'
-                                        }`}>
+                                        } `}>
                                         <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Percentage Difference</span>
-                                        <span className={`text-xl font-bold ${result.valuation === 'undervalued'
+                                        <span className={`text - xl font - bold ${result.valuation === 'undervalued'
                                             ? 'text-green-600 dark:text-green-400'
                                             : result.valuation === 'overvalued'
                                                 ? 'text-red-600 dark:text-red-400'
                                                 : 'text-slate-900 dark:text-white'
-                                            }`}>
+                                            } `}>
                                             {result.percentageDifference > 0 ? '+' : ''}{result.percentageDifference.toFixed(2)}%
                                         </span>
                                     </div>
@@ -435,6 +436,8 @@ export default function BlackScholesCalculator() {
                     )}
                 </div>
             </div>
+            {/* AdSense Display Ad */}
+            <AdSlot slot="black-scholes-bottom" format="horizontal" className="mt-8" />
         </div>
     );
 }

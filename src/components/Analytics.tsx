@@ -6,7 +6,7 @@ import MarketHeatmap from './MarketHeatmap';
 import PCRAnalysis from './PCRAnalysis';
 import BlackScholesCalculator from './BlackScholesCalculator';
 import PerformanceMetrics from './PerformanceMetrics';
-import { DisplayAd } from './AdSense';
+import AdSlot from './AdSlot';
 
 type Tab = 'chain' | 'heatmap' | 'pcr' | 'calculator' | 'metrics';
 
@@ -82,7 +82,7 @@ export default function Analytics() {
             </div>
 
             {/* AdSense Display Ad */}
-            <DisplayAd adSlot="1234567899" className="mt-6" />
+            <AdSlot slot="analytics-bottom" format="horizontal" className="mt-6" />
         </div>
     );
 }

@@ -1,6 +1,7 @@
 import { usePaperTrading } from '../context/PaperTradingContext';
 import { useLivePrices } from '../context/LivePriceContext';
-import { TrendingUp, DollarSign, BarChart3, Trophy, RefreshCw, History } from 'lucide-react';
+import { TrendingUp, DollarSign, BarChart3, Trophy, RefreshCw, History, Wallet, TrendingDown, Plus, Search, Filter, ArrowUpRight, ArrowDownRight, Zap, Target } from 'lucide-react';
+import AdSlot from './AdSlot';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
@@ -361,6 +362,8 @@ export default function PaperPortfolio() {
                     </div>
                 )}
             </div>
+            {/* AdSense Display Ad */}
+            <AdSlot slot="paper-portfolio-bottom" format="horizontal" className="mt-8" />
         </div>
     );
 }

@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { TrendingUp, TrendingDown, Search, Zap, BarChart2, DollarSign } from 'lucide-react';
-import { DisplayAd } from './AdSense';
+import { TrendingUp, TrendingDown, Droplet, Search, RefreshCw, ArrowRight } from 'lucide-react';
+import AdSlot from './AdSlot';
 
 interface CommodityData {
     name: string;
@@ -44,7 +44,7 @@ export default function Commodity() {
             <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-200 dark:border-slate-700">
                 <div className="flex items-center gap-3 mb-4">
                     <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-amber-600 rounded-xl flex items-center justify-center">
-                        <Zap className="w-6 h-6 text-white" />
+                        <Droplet className="w-6 h-6 text-white" />
                     </div>
                     <div>
                         <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Commodity Market</h1>
@@ -70,8 +70,8 @@ export default function Commodity() {
                                 key={cat}
                                 onClick={() => setFilterCategory(cat)}
                                 className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition ${filterCategory === cat
-                                        ? 'bg-orange-600 text-white shadow-md'
-                                        : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
+                                    ? 'bg-orange-600 text-white shadow-md'
+                                    : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
                                     }`}
                             >
                                 {cat}
@@ -129,7 +129,7 @@ export default function Commodity() {
             {/* Info Box */}
             <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-xl p-6">
                 <div className="flex items-start gap-3">
-                    <BarChart2 className="w-5 h-5 text-orange-600 dark:text-orange-400 flex-shrink-0 mt-0.5" />
+                    <RefreshCw className="w-5 h-5 text-orange-600 dark:text-orange-400 flex-shrink-0 mt-0.5" />
                     <div>
                         <h4 className="font-semibold text-orange-900 dark:text-orange-300 mb-2">About Commodities</h4>
                         <p className="text-sm text-orange-800 dark:text-orange-400">
@@ -142,7 +142,7 @@ export default function Commodity() {
             </div>
 
             {/* AdSense Display Ad */}
-            <DisplayAd adSlot="1234567913" className="mt-6" />
+            <AdSlot slot="commodity-bottom" format="horizontal" className="mt-8 opacity-80" />
         </div>
     );
 }

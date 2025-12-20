@@ -1,12 +1,12 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Plus, Trash2, Play, TrendingUp, Activity, Target, BarChart3, Zap, BookOpen } from 'lucide-react';
+import { PlusSquare, MinusSquare, Trash2, Play, RefreshCw, Save, Share2, TrendingUp, TrendingDown, Target, Zap, Activity, Info, ChevronRight, HelpCircle, BarChart3, AlertTriangle } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 
 import { calculateMargin } from '../utils/marginCalculator';
 import { runBacktestSimulation } from '../utils/backtestEngine';
 import { usePaperTrading } from '../context/PaperTradingContext';
 import { useAnalytics } from '../hooks/useAnalytics';
-import { DisplayAd } from './AdSense';
+import AdSlot from './AdSlot';
 
 interface OptionLeg {
     id: string;
@@ -30,12 +30,18 @@ import { useLocation } from 'react-router-dom';
 export default function StrategyBuilder() {
     const { logEvent } = useAnalytics();
     const location = useLocation();
-    const initialState = location.state as { strategyName?: string; legs?: OptionLeg[] } | null;
+    const initialState = location.state as {
+        templateName?: string;
+        strategyName?: string;
+        legs?: OptionLeg[];
+        symbol?: string;
+        spotPrice?: number;
+    } | null;
 
     const [activeTab, setActiveTab] = useState<'builder' | 'backtest' | 'templates'>('builder');
     const [categoryFilter, setCategoryFilter] = useState<'All' | 'Bullish' | 'Bearish' | 'Neutral'>('All');
-    const [symbol, setSymbol] = useState('NIFTY 50');
-    const [spotPrice, setSpotPrice] = useState(24500); // Updated default
+    const [symbol, setSymbol] = useState(initialState?.symbol || 'NIFTY 50');
+    const [spotPrice, setSpotPrice] = useState(initialState?.spotPrice || 24500);
     const [legs, setLegs] = useState<OptionLeg[]>(initialState?.legs || []);
     const [strategyName, setStrategyName] = useState(initialState?.strategyName || 'Custom Strategy');
     const [backtestResults, setBacktestResults] = useState<any>(null);
@@ -47,23 +53,30 @@ export default function StrategyBuilder() {
     })), spotPrice) : null;
 
     useEffect(() => {
-        console.log('StrategyBuilder: Location State Received:', location.state);
+        if (!location.state) return;
 
-        // Handle direct state checks if initialState variable is stale or check fresh location.state
-        const currentState = location.state as { strategyName?: string; legs?: OptionLeg[] } | null;
+        console.log('StrategyBuilder: Processing incoming state:', location.state);
+        const currentState = location.state as typeof initialState;
 
-        if (currentState?.strategyName) {
-            console.log('StrategyBuilder: Setting Strategy Name:', currentState.strategyName);
-            setStrategyName(currentState.strategyName);
-        }
+        if (currentState?.symbol) setSymbol(currentState.symbol);
+        if (currentState?.spotPrice) setSpotPrice(currentState.spotPrice);
 
-        if (currentState?.legs) {
-            console.log('StrategyBuilder: Setting Legs:', currentState.legs);
+        // Prioritize custom legs if provided
+        if (currentState?.legs && currentState.legs.length > 0) {
+            console.log('StrategyBuilder: Loading Custom Legs');
             setLegs(currentState.legs);
-            // Default to builder tab
+            if (currentState.strategyName) setStrategyName(currentState.strategyName);
             setActiveTab('builder');
         }
-    }, [location.state]); // Depend specifically on location.state
+        // Fallback to template name lookup if no legs but name is present
+        else if (currentState?.templateName) {
+            console.log('StrategyBuilder: Loading Template by Name:', currentState.templateName);
+            const template = templates.find(t => t.name.toLowerCase() === currentState.templateName?.toLowerCase());
+            if (template) {
+                loadTemplate(template);
+            }
+        }
+    }, [location.state]);
 
     // Dynamic Strategy Templates
     const templates = [
@@ -384,15 +397,16 @@ export default function StrategyBuilder() {
     const metrics = useMemo(() => legs.length > 0 ? calculateStrategyMetrics() : null, [legs, payoffData]);
     const netPremium = useMemo(() => legs.reduce((sum, leg) => {
         return sum + (leg.action === 'BUY' ? -leg.premium : leg.premium) * leg.quantity;
-    }, 0), [legs]);
+    }, 0), [location.state]);
 
     return (
         <div className="space-y-6">
+            {/* Strategy Builder Top Ad */}
+            <AdSlot slot="strategy-builder-top" format="horizontal" />
             {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
                     <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Derivatives Strategy Builder</h1>
-                    <p className="text-slate-500 dark:text-slate-400">Build and backtest multi-leg options & futures strategies</p>
                 </div>
                 <div className="flex gap-3 flex-wrap">
                     <select
@@ -931,8 +945,10 @@ export default function StrategyBuilder() {
                 </div>
             )}
 
-            {/* AdSense Display Ad */}
-            <DisplayAd adSlot="1234567892" className="mt-6" />
+            {/* Strategy Analysis Ad */}
+            <AdSlot slot="strategy-builder-analysis" format="horizontal" className="mt-6" />
+            {/* Bottom Ad */}
+            <AdSlot slot="strategy-builder-bottom" format="horizontal" className="mt-8" />
         </div>
     );
 }

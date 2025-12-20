@@ -9,6 +9,8 @@ import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
 import { useAnalytics } from '../hooks/useAnalytics';
+import DonationModal from './DonationModal';
+import AdSlot from './AdSlot';
 import { InFeedAd } from './AdSense';
 
 interface Post {
@@ -24,7 +26,8 @@ interface Post {
   shares: number;
   isLiked?: boolean;
   created_at: string;
-  type: 'text' | 'trade' | 'poll' | 'photo';
+  type: 'text' | 'trade' | 'poll' | 'poll' | 'photo' | 'tradingview';
+  external_url?: string;
   tradeDetails?: {
     symbol: string;
     action: 'BUY' | 'SELL';
@@ -38,9 +41,9 @@ interface Post {
     question: string;
     options: { id: string; text: string; votes: number }[];
     totalVotes: number;
-    userVoted?: string;
+    poll_voted?: string;
   };
-  badges?: ('pro' | 'analyst' | 'verified')[];
+  badges?: ('pro' | 'analyst' | 'verified' | 'tradingview')[];
 }
 
 type FeedType = 'home' | 'popular' | 'following';
@@ -56,6 +59,7 @@ export default function Community() {
   const [loading, setLoading] = useState(true);
   const [posting, setPosting] = useState(false);
   const [followedUsers, setFollowedUsers] = useState<number[]>([]);
+  const [tradingViewPosts, setTradingViewPosts] = useState<Post[]>([]);
 
 
   // Trade Input State
@@ -81,38 +85,124 @@ export default function Community() {
     }
   };
 
-  const uploadImage = async (dataUrl: string): Promise<string | null> => {
+  const fetchPosts = async () => {
     try {
-      const fileExt = 'png'; // Simplified for base64
-      const fileName = `${Math.random()}.${fileExt}`;
-      const filePath = `${user?.id}/${fileName}`;
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('community_posts')
+        .select('*')
+        .order('created_at', { ascending: false });
 
-      // Convert base64 to blob
-      const res = await fetch(dataUrl);
-      const blob = await res.blob();
+      if (error) throw error;
 
-      const { error: uploadError } = await supabase.storage
-        .from('community-images')
-        .upload(filePath, blob);
+      const formattedPosts: Post[] = data?.map((post: any) => ({
+        id: post.id.toString(),
+        author: post.author_name || 'Anonymous',
+        handle: `@${post.author_name?.toLowerCase().replace(/\s+/g, '') || 'user'}`,
+        avatar_url: post.author_avatar || `https://ui-avatars.com/api/?name=${post.author_name || 'User'}&background=random`,
+        time: new Date(post.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        content: post.content,
+        image_url: post.image_url,
+        likes: post.likes || 0,
+        comments: 0, // In a real app, count from community_comments
+        shares: 0,
+        type: post.type || 'text',
+        created_at: post.created_at,
+        tradeDetails: post.trade_details,
+        pollDetails: post.poll_details
+      })) || [];
 
-      if (uploadError) {
-        if (uploadError.message.includes('bucket not found')) {
-          alert('Storage bucket "community-images" not found. Please create it in Supabase dashboard.');
-          return null;
-        }
-        throw uploadError;
-      }
-
-      const { data } = supabase.storage
-        .from('community-images')
-        .getPublicUrl(filePath);
-
-      return data.publicUrl;
+      setPosts(formattedPosts);
     } catch (error) {
-      console.error('Error uploading image:', error);
-      return null;
+      console.error('Error fetching posts:', error);
+      // Fallback to empty if fails
+      setPosts([]);
+    } finally {
+      setLoading(false);
     }
   };
+
+  const fetchTradingViewIdeas = async () => {
+    try {
+      const response = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent('https://www.tradingview.com/feed/')}`);
+      const xmlText = await response.text();
+      const parser = new DOMParser();
+      const xmlDoc = parser.parseFromString(xmlText, 'text/xml');
+      const items = xmlDoc.querySelectorAll('item');
+
+      const now = new Date();
+      const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
+
+      const ideas: Post[] = [];
+
+      items.forEach((item) => {
+        const pubDateStr = item.querySelector('pubDate')?.textContent;
+        const pubDate = pubDateStr ? new Date(pubDateStr) : new Date();
+
+        // ONLY LATEST ONE HOUR
+        if (pubDate >= oneHourAgo) {
+          const title = item.querySelector('title')?.textContent || 'TradingView Idea';
+          const link = item.querySelector('link')?.textContent || '';
+          const guid = item.querySelector('guid')?.textContent || link;
+          const description = item.querySelector('description')?.textContent || '';
+
+          // Try to extract author and image from encoded content if available
+          let author = 'TradingView Analyst';
+          let imageUrl = undefined;
+
+          // Manual basic extraction from description or guid-like strings if needed
+          // For now, use the title and generic author.
+
+          ideas.push({
+            id: `tv-${guid}`,
+            author: author,
+            handle: '@tradingview',
+            avatar_url: 'https://www.tradingview.com/static/images/favicon.ico',
+            time: pubDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            content: title + '\n\n' + description.substring(0, 200) + (description.length > 200 ? '...' : ''),
+            image_url: imageUrl,
+            likes: Math.floor(Math.random() * 50),
+            comments: 0,
+            shares: 0,
+            isLiked: false,
+            created_at: pubDate.toISOString(),
+            type: 'tradingview',
+            external_url: link,
+            badges: ['tradingview']
+          });
+        }
+      });
+
+      setTradingViewPosts(ideas);
+    } catch (error) {
+      console.error('Error fetching TradingView ideas:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchPosts();
+    fetchTradingViewIdeas();
+
+    // Auto-update every 5 minutes
+    const fetchInterval = setInterval(() => {
+      fetchPosts();
+      fetchTradingViewIdeas();
+    }, 5 * 60 * 1000);
+
+    // Auto-cleanup stale ideas every minute
+    const cleanupInterval = setInterval(() => {
+      setTradingViewPosts(prev => {
+        const now = new Date();
+        const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
+        return prev.filter(post => new Date(post.created_at) >= oneHourAgo);
+      });
+    }, 60 * 1000);
+
+    return () => {
+      clearInterval(fetchInterval);
+      clearInterval(cleanupInterval);
+    };
+  }, []);
 
   const handleCreatePost = async () => {
     if (!user) {
@@ -420,6 +510,10 @@ export default function Community() {
     }
   };
 
+  const combinedPosts = [...posts, ...tradingViewPosts].sort((a, b) =>
+    new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  );
+
   return (
     <div className="min-h-screen bg-[#F0F2F5] dark:bg-[#18191A] text-slate-900 dark:text-slate-100 font-sans">
       {/* Header */}
@@ -602,8 +696,16 @@ export default function Community() {
               </div>
             ) : (
               <div className="space-y-4">
-                {posts.map(post => (
-                  <div key={post.id} className="bg-white dark:bg-[#242526] rounded-xl shadow overflow-hidden">
+                {combinedPosts.map(post => (
+                  <div key={post.id} className="bg-white dark:bg-[#242526] rounded-xl shadow overflow-hidden relative">
+                    {post.type === 'tradingview' && (
+                      <div className="absolute top-4 right-4 z-10">
+                        <span className="bg-blue-600 text-white text-[10px] px-2 py-1 rounded font-bold flex items-center gap-1 shadow-lg animate-pulse">
+                          <TrendingUp className="w-3 h-3" />
+                          REAL-TIME IDEA
+                        </span>
+                      </div>
+                    )}
                     {/* Post Header */}
                     <div className="p-4 flex items-center justify-between">
                       <div className="flex items-center gap-3">
@@ -683,6 +785,9 @@ export default function Community() {
                                 </div>
                               );
                             })}
+
+                            {/* Community Feed Mid Ad */}
+                            <AdSlot slot="community-feed-mid" format="fluid" />
                           </div>
                           <p className="text-xs text-slate-500 mt-2">{post.pollDetails.totalVotes} votes • 1 day left</p>
                         </div>
@@ -722,27 +827,41 @@ export default function Community() {
 
                     {/* Post Actions */}
                     <div className="px-2 py-1 flex items-center justify-between">
-                      <button
-                        onClick={() => handleLike(post.id)}
-                        className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg hover:bg-[#F0F2F5] dark:hover:bg-[#3A3B3C] transition font-medium ${post.isLiked ? 'text-blue-600' : 'text-slate-600 dark:text-slate-300'}`}
-                      >
-                        <ThumbsUp className={`w-5 h-5 ${post.isLiked ? 'fill-current' : ''}`} />
-                        Like
-                      </button>
-                      <button
-                        onClick={() => toggleComments(post.id)}
-                        className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg hover:bg-[#F0F2F5] dark:hover:bg-[#3A3B3C] transition font-medium ${activeCommentPostId === post.id ? 'text-blue-600 bg-blue-50 dark:bg-blue-900/20' : 'text-slate-600 dark:text-slate-300'}`}
-                      >
-                        <MessageSquare className="w-5 h-5" />
-                        Comment
-                      </button>
-                      <button
-                        onClick={() => handleShare(post)}
-                        className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg hover:bg-[#F0F2F5] dark:hover:bg-[#3A3B3C] transition font-medium text-slate-600 dark:text-slate-300"
-                      >
-                        <Share2 className="w-5 h-5" />
-                        Share
-                      </button>
+                      {post.type === 'tradingview' ? (
+                        <a
+                          href={post.external_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-600 hover:bg-blue-100 transition font-bold"
+                        >
+                          <ArrowUpRight className="w-5 h-5" />
+                          View Full Analysis on TradingView
+                        </a>
+                      ) : (
+                        <>
+                          <button
+                            onClick={() => handleLike(post.id)}
+                            className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg hover:bg-[#F0F2F5] dark:hover:bg-[#3A3B3C] transition font-medium ${post.isLiked ? 'text-blue-600' : 'text-slate-600 dark:text-slate-300'}`}
+                          >
+                            <ThumbsUp className={`w-5 h-5 ${post.isLiked ? 'fill-current' : ''}`} />
+                            Like
+                          </button>
+                          <button
+                            onClick={() => toggleComments(post.id)}
+                            className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg hover:bg-[#F0F2F5] dark:hover:bg-[#3A3B3C] transition font-medium ${activeCommentPostId === post.id ? 'text-blue-600 bg-blue-50 dark:bg-blue-900/20' : 'text-slate-600 dark:text-slate-300'}`}
+                          >
+                            <MessageSquare className="w-5 h-5" />
+                            Comment
+                          </button>
+                          <button
+                            onClick={() => handleShare(post)}
+                            className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg hover:bg-[#F0F2F5] dark:hover:bg-[#3A3B3C] transition font-medium text-slate-600 dark:text-slate-300"
+                          >
+                            <Share2 className="w-5 h-5" />
+                            Share
+                          </button>
+                        </>
+                      )}
                     </div>
 
                     {/* Comment Section */}

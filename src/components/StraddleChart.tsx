@@ -1,5 +1,6 @@
 import { useState, useEffect, memo, useCallback } from 'react';
-import { TrendingUp, Activity, RefreshCw, Download, Calendar } from 'lucide-react';
+import { Activity, RefreshCw, AlertCircle, Zap, TrendingUp, TrendingDown, Download, Calendar } from 'lucide-react';
+import AdSlot from './AdSlot';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import Skeleton from './Skeleton';
 import { useLivePrices } from '../context/LivePriceContext';
@@ -583,6 +584,8 @@ function StraddleChart() {
                     </div>
                 </div>
             </div>
+            {/* AdSense Display Ad */}
+            <AdSlot slot="straddle-chart-bottom" format="horizontal" className="mt-8" />
         </div>
     );
 }

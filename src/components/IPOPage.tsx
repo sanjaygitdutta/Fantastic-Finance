@@ -1,6 +1,6 @@
 import { TrendingUp, Calendar, DollarSign, FileText, Clock, Users, X, ExternalLink, Info } from 'lucide-react';
 import { useState } from 'react';
-import { InFeedAd } from './AdSense';
+import AdSlot from './AdSlot';
 
 interface IPO {
     id: number;
@@ -155,6 +155,9 @@ export default function IPOPage() {
                         ))}
                     </div>
                 </div>
+
+                {/* IPO Top Ad */}
+                <AdSlot slot="ipo-top-banner" format="horizontal" className="mb-8" />
 
                 {/* IPO Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -364,7 +367,7 @@ export default function IPOPage() {
             )}
 
             {/* AdSense In-Feed Ad */}
-            <InFeedAd adSlot="1234567905" className="mt-6" />
+            <AdSlot slot="ipo-bottom" format="horizontal" className="mt-6" />
         </div>
     );
 }

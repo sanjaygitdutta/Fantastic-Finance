@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Filter, RefreshCw, ArrowUpRight, ArrowDownRight, Activity, TrendingUp, TrendingDown } from 'lucide-react';
+import { Filter, RefreshCw, ArrowUpRight, ArrowDownRight, Activity, TrendingUp, TrendingDown, Search, Target, Zap, BarChart3, AlertCircle } from 'lucide-react';
+import AdSlot from './AdSlot';
 import { scanOptionsActivity, ScannerResult } from '../services/scannerService';
 import { DisplayAd } from './AdSense';
 
@@ -232,6 +233,8 @@ export default function OptionsScanner() {
 
             {/* AdSense Display Ad */}
             <DisplayAd adSlot="1234567896" className="mt-6" />
+            {/* AdSense Display Ad */}
+            <AdSlot slot="options-scanner-bottom" format="horizontal" className="mt-8" />
         </div>
     );
 }

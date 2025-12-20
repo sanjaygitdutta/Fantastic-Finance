@@ -1,5 +1,6 @@
 import { useRef, useEffect, memo } from 'react';
 import { Calendar as CalendarIcon, AlertCircle } from 'lucide-react';
+import AdSlot from './AdSlot';
 
 const TradingViewCalendar = memo(function TradingViewCalendar() {
     const container = useRef<HTMLDivElement>(null);
@@ -54,6 +55,9 @@ export default function EconomicCalendar() {
                         </div>
                     </div>
                 </div>
+
+                {/* Calendar Top Ad */}
+                <AdSlot slot="calendar-top-banner" format="horizontal" className="mb-8" />
 
                 {/* Widget */}
                 <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">

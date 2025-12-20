@@ -1,199 +1,138 @@
 import { useLivePrices } from '../context/LivePriceContext';
-import { TrendingUp, TrendingDown, Bitcoin, Activity, Clock, Zap, Globe, Newspaper, ArrowRight, Wallet } from 'lucide-react';
+import { Activity, Globe, Newspaper, ArrowRight, TrendingUp } from 'lucide-react';
 import SEO from '../components/SEO';
+import AdSlot from '../components/AdSlot';
 import {
     CryptoChartWidget,
     FearAndGreedWidget,
-    LongShortRatioWidget,
     CryptoConverterWidget,
-    BitcoinDerivativesWidget
+    BitcoinDerivativesWidget,
+    LongShortRatioWidget
 } from '../components/CryptoMarketWidgets';
+import { TVWidget } from '../components/TVWidget';
 
 export default function CryptoMarket() {
-    const { prices, lastUpdated } = useLivePrices();
-
-    // Extended list of Cryptos
-    const cryptos = [
-        { key: 'BTC', name: 'Bitcoin', symbol: 'BTC/USD', color: 'text-orange-600', bg: 'bg-orange-100', icon: Bitcoin },
-        { key: 'ETH', name: 'Ethereum', symbol: 'ETH/USD', color: 'text-indigo-600', bg: 'bg-indigo-100', icon: Activity },
-        { key: 'SOL', name: 'Solana', symbol: 'SOL/USD', color: 'text-purple-600', bg: 'bg-purple-100', icon: Zap },
-        { key: 'XRP', name: 'XRP', symbol: 'XRP/USD', color: 'text-blue-600', bg: 'bg-blue-100', icon: Globe },
-        { key: 'ADA', name: 'Cardano', symbol: 'ADA/USD', color: 'text-blue-500', bg: 'bg-blue-50', icon: Wallet },
-        { key: 'DOGE', name: 'Dogecoin', symbol: 'DOGE/USD', color: 'text-yellow-500', bg: 'bg-yellow-100', icon: Wallet },
-        { key: 'DOT', name: 'Polkadot', symbol: 'DOT/USD', color: 'text-pink-600', bg: 'bg-pink-100', icon: Wallet },
-        { key: 'UNI', name: 'Uniswap', symbol: 'UNI/USD', color: 'text-pink-500', bg: 'bg-pink-50', icon: Wallet },
-        { key: 'LINK', name: 'Chainlink', symbol: 'LINK/USD', color: 'text-blue-700', bg: 'bg-blue-100', icon: Globe },
-        { key: 'BCH', name: 'Bitcoin Cash', symbol: 'BCH/USD', color: 'text-green-600', bg: 'bg-green-100', icon: Bitcoin },
-    ];
-
-    // Calculate Market Overview (Top Gainers/Losers)
-    const marketMovers = [...cryptos].map(c => ({
-        ...c,
-        data: prices[c.key] || { price: 0, change: 0, changePercent: 0 }
-    })).sort((a, b) => b.data.changePercent - a.data.changePercent);
-
-    const topGainers = marketMovers.slice(0, 3);
-    const topLosers = [...marketMovers].reverse().slice(0, 3);
-
-    const PriceCard = ({ item }: { item: any }) => {
-        const data = prices[item.key];
-
-        // Skeleton
-        if (!data) return (
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 animate-pulse">
-                <div className="h-6 bg-slate-200 rounded w-1/2 mb-4"></div>
-                <div className="h-8 bg-slate-200 rounded w-3/4"></div>
-            </div>
-        );
-
-        const isPositive = data.change >= 0;
-        const Icon = item.icon;
-
-        return (
-            <div className="bg-white rounded-xl shadow-sm hover:shadow-md transition-all border border-slate-200 p-6 relative overflow-hidden group">
-                <div className="flex justify-between items-start mb-4 relative z-10">
-                    <div className="flex items-center gap-3">
-                        <div className={`p-2 rounded-lg ${item.bg}`}>
-                            <Icon className={`w-6 h-6 ${item.color}`} />
-                        </div>
-                        <div>
-                            <h3 className="text-lg font-bold text-slate-800">
-                                {item.name}
-                            </h3>
-                            <p className="text-xs text-slate-500 font-medium">{item.symbol}</p>
-                        </div>
-                    </div>
-                    <div className={`flex items-center gap-1 font-semibold ${isPositive ? 'text-green-600' : 'text-red-500'}`}>
-                        {isPositive ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
-                        <span className="text-sm">{Math.abs(data.changePercent).toFixed(2)}%</span>
-                    </div>
-                </div>
-
-                <div className="relative z-10">
-                    <div className="text-3xl font-bold text-slate-900 tracking-tight tabular-nums">
-                        ${data.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })}
-                    </div>
-                </div>
-            </div>
-        );
-    };
+    const { prices } = useLivePrices();
 
     return (
-        <div className="min-h-screen bg-slate-50 text-slate-900 pb-20">
+        <div className="min-h-screen bg-slate-50 text-slate-900 pb-20 animate-in slide-up">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <SEO
-                    title="Live Crypto Market | Fantastic Finance"
-                    description="Real-time cryptocurrency prices for Bitcoin, Ethereum, XRP, ADA, and more. Track the crypto market 24/7."
+                    title="Live Crypto Market | Real-time Bitcoin & Altcoin Data"
+                    description="Track live cryptocurrency prices and trends with professional TradingView integration. Real-time data for BTC, ETH, and more."
                 />
 
-                {/* Header */}
-                <div className="mb-8 pt-4 flex flex-col md:flex-row md:items-end justify-between gap-6">
-                    <div>
-                        <div className="flex items-center gap-3 mb-2">
-                            <div className="bg-blue-600 p-2 rounded-lg">
-                                <Activity className="w-6 h-6 text-white" />
-                            </div>
-                            <h1 className="text-3xl font-bold text-slate-900">
-                                Crypto Market
-                            </h1>
-                        </div>
-                        <div className="flex items-center gap-4 text-slate-500 text-sm">
-                            <p>Global Market Data</p>
-                            <span className="flex items-center gap-1 bg-white text-slate-600 px-3 py-1 rounded-full text-xs font-medium border border-slate-200 shadow-sm">
-                                <Clock className="w-3 h-3" />
-                                Updated: {lastUpdated?.toLocaleTimeString()}
-                            </span>
-                        </div>
+                {/* Header Section */}
+                <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-3xl p-8 mb-8 text-white shadow-xl relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-20 -mt-20 group-hover:scale-110 transition-transform duration-700"></div>
+                    <div className="relative z-10">
+                        <h1 className="text-4xl font-extrabold mb-2 flex items-center gap-4">
+                            <Globe className="w-10 h-10 text-orange-200" />
+                            Crypto Command Center
+                        </h1>
+                        <p className="text-orange-50 text-lg max-w-2xl">Institutional-grade real-time crypto analytics, heatmaps, and advanced charting.</p>
                     </div>
                 </div>
 
                 {/* Main Content Area */}
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
 
-                    {/* Left Column: All Assets & Tools (8 cols) */}
+                    {/* Left Column: Charts & Quotes (8 cols) */}
                     <div className="lg:col-span-8 space-y-8">
 
-                        {/* Full Asset List Grid */}
-                        <div>
-                            <h2 className="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
-                                <Globe className="w-5 h-5 text-blue-600" />
-                                Market Watch
-                            </h2>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                                {cryptos.map(crypto => (
-                                    <PriceCard key={crypto.key} item={crypto} />
-                                ))}
+                        {/* Real-time Crypto Quotes Table */}
+                        <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden h-[500px] flex flex-col">
+                            <div className="p-5 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
+                                <h2 className="text-xl font-extrabold text-slate-800 flex items-center gap-2">
+                                    <Activity className="w-6 h-6 text-blue-600" />
+                                    Live Global Crypto Exchange Data
+                                </h2>
+                                <span className="bg-green-100 text-green-700 text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-tighter">Live Stream</span>
+                            </div>
+                            <div className="flex-1">
+                                <TVWidget
+                                    height="100%"
+                                    scriptHTML={{
+                                        src: "https://s3.tradingview.com/external-embedding/embed-widget-market-quotes.js",
+                                        innerHTML: JSON.stringify({
+                                            width: "100%",
+                                            height: "100%",
+                                            symbolsGroups: [
+                                                {
+                                                    name: "Top Assets",
+                                                    symbols: [
+                                                        { name: "BINANCE:BTCUSDT", displayName: "Bitcoin" },
+                                                        { name: "BINANCE:ETHUSDT", displayName: "Ethereum" },
+                                                        { name: "BINANCE:SOLUSDT", displayName: "Solana" },
+                                                        { name: "BINANCE:BNBUSDT", displayName: "BNB" },
+                                                        { name: "BINANCE:XRPUSDT", displayName: "XRP" }
+                                                    ]
+                                                },
+                                                {
+                                                    name: "Ecosystems",
+                                                    symbols: [
+                                                        { name: "BINANCE:ADAUSDT", displayName: "Cardano" },
+                                                        { name: "BINANCE:AVAXUSDT", displayName: "Avalanche" },
+                                                        { name: "BINANCE:DOTUSDT", displayName: "Polkadot" },
+                                                        { name: "BINANCE:LINKUSDT", displayName: "Chainlink" },
+                                                        { name: "BINANCE:MATICUSDT", displayName: "Polygon" }
+                                                    ]
+                                                }
+                                            ],
+                                            showSymbolLogo: true,
+                                            colorTheme: "light",
+                                            isTransparent: false,
+                                            locale: "en"
+                                        })
+                                    }}
+                                />
                             </div>
                         </div>
 
-                        {/* Chart Area */}
-                        <div>
-                            <h2 className="text-xl font-bold text-slate-800 mb-4">Advanced Analysis</h2>
-                            <CryptoChartWidget />
-                        </div>
+                        {/* Crypto Mid Ad */}
+                        <AdSlot slot="crypto-mid-banner" format="horizontal" />
+
+                        {/* Professional Charting */}
+                        <CryptoChartWidget />
 
                         {/* Bitcoin Derivatives */}
                         <BitcoinDerivativesWidget />
 
                     </div>
 
-                    {/* Right Column: Sidebar (4 cols) */}
+                    {/* Right Column: Tools & Sentiment (4 cols) */}
                     <div className="lg:col-span-4 space-y-8">
 
-                        {/* Market Movers */}
-                        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-                            <h3 className="text-lg font-bold text-slate-800 mb-4">Top Movers</h3>
-                            <div className="space-y-4">
-                                <div>
-                                    <p className="text-xs font-semibold text-slate-400 uppercase mb-2">Top Gainers</p>
-                                    {topGainers.map((coin) => (
-                                        <div key={coin.key} className="flex justify-between items-center py-2 border-b border-slate-50 last:border-0">
-                                            <div className="flex items-center gap-2">
-                                                <span className="font-medium text-slate-700">{coin.name}</span>
-                                                <span className="text-xs text-slate-400">{coin.key}</span>
-                                            </div>
-                                            <span className="text-green-600 font-medium">+{coin.data.changePercent.toFixed(2)}%</span>
-                                        </div>
-                                    ))}
-                                </div>
-                                <div className="pt-2">
-                                    <p className="text-xs font-semibold text-slate-400 uppercase mb-2">Top Losers</p>
-                                    {topLosers.map((coin) => (
-                                        <div key={coin.key} className="flex justify-between items-center py-2 border-b border-slate-50 last:border-0">
-                                            <div className="flex items-center gap-2">
-                                                <span className="font-medium text-slate-700">{coin.name}</span>
-                                                <span className="text-xs text-slate-400">{coin.key}</span>
-                                            </div>
-                                            <span className="text-red-500 font-medium">{coin.data.changePercent.toFixed(2)}%</span>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
+                        {/* Sentiment Analysis */}
+                        <LongShortRatioWidget />
 
                         {/* Fear & Greed */}
                         <FearAndGreedWidget />
 
-                        {/* Converter */}
+                        <AdSlot slot="crypto-sidebar-1" format="rectangle" />
+
+                        {/* Calculator */}
                         <CryptoConverterWidget />
 
-                        {/* News Section (Mock) */}
-                        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-                            <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
-                                <Newspaper className="w-5 h-5 text-purple-600" />
-                                Latest News
+                        <AdSlot slot="crypto-sidebar-2" format="rectangle" />
+
+                        {/* Market News */}
+                        <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 overflow-hidden">
+                            <h3 className="text-lg font-extrabold text-slate-800 mb-6 flex items-center gap-2">
+                                <Newspaper className="w-5 h-5 text-indigo-600" />
+                                Institutional News
                             </h3>
-                            <div className="space-y-4">
+                            <div className="space-y-6">
                                 {[
-                                    { title: "Bitcoin Hits New Yearly High", time: "2h ago", source: "CoinDesk" },
-                                    { title: "SEC Approves New Crypto ETF", time: "4h ago", source: "Bloomberg" },
-                                    { title: "Ethereum Upgrade Successful", time: "6h ago", source: "Decrypt" },
+                                    { title: "Bitcoin Consolidation Pattern Signals Upside", time: "1h ago", source: "MarketEdge" },
+                                    { title: "Solana Ecosystem TVL Hits 2-Year High", time: "3h ago", source: "CryptoFlow" },
+                                    { title: "Global Regulatory Shift Towards Digital Assets", time: "5h ago", source: "FinInsights" },
                                 ].map((news, i) => (
-                                    <div key={i} className="group cursor-pointer">
-                                        <h4 className="font-medium text-slate-700 group-hover:text-blue-600 transition-colors line-clamp-2">
+                                    <div key={i} className="group cursor-pointer border-l-2 border-slate-100 hover:border-blue-500 pl-4 transition-all">
+                                        <h4 className="font-bold text-slate-700 group-hover:text-blue-600 transition-colors line-clamp-2 leading-snug">
                                             {news.title}
                                         </h4>
-                                        <div className="flex items-center gap-2 mt-1 text-xs text-slate-400">
+                                        <div className="flex items-center gap-2 mt-2 text-[10px] uppercase font-bold text-slate-400">
                                             <span>{news.source}</span>
                                             <span>•</span>
                                             <span>{news.time}</span>
@@ -201,20 +140,22 @@ export default function CryptoMarket() {
                                     </div>
                                 ))}
                             </div>
-                            <button className="w-full mt-4 py-2 text-sm text-blue-600 font-medium hover:bg-blue-50 rounded-lg transition-colors flex items-center justify-center gap-1">
-                                Read More <ArrowRight className="w-4 h-4" />
+                            <button className="w-full mt-8 py-3 bg-slate-50 text-sm text-blue-600 font-bold hover:bg-blue-50 rounded-2xl transition-all flex items-center justify-center gap-2 border border-slate-100">
+                                Global News Hub <ArrowRight className="w-4 h-4" />
                             </button>
                         </div>
                     </div>
                 </div>
 
-                <div className="mt-12 p-6 bg-white border border-slate-200 rounded-xl text-center">
-                    <p className="text-sm text-slate-500 mb-2">
-                        Disclaimer: Cryptocurrency investments are subject to market risks. The data provided here is for informational purposes only.
-                    </p>
-                    <p className="text-xs text-slate-400">
-                        Data provided by Twelve Data & TradingView.
-                    </p>
+                {/* Information Modal Footer */}
+                <div className="mt-12 p-8 bg-slate-800 rounded-[2.5rem] text-white/80 shadow-inner">
+                    <div className="max-w-3xl mx-auto text-center">
+                        <p className="text-sm italic mb-4">
+                            "Transparency and Speed are the core pillars of modern finance. Our platform ensures you have the edge with sub-second data synchronization."
+                        </p>
+                        <div className="h-px bg-white/10 mb-4"></div>
+                        <p className="text-xs uppercase tracking-[0.2em]">Data Federated from Exchange Hot-Streams & TradingView</p>
+                    </div>
                 </div>
             </div>
         </div>

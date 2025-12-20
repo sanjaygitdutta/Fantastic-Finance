@@ -1,36 +1,7 @@
-import { useEffect, useRef, memo, useState } from 'react';
+import { useEffect, memo, useState } from 'react';
 import { Activity, ArrowRight, Gauge, Layers, TrendingUp, DollarSign } from 'lucide-react';
 import { useLivePrices } from '../context/LivePriceContext';
-
-// --- Helper: TV Widget ---
-const TVWidget = ({ scriptHTML, height = "400px" }: { scriptHTML: any, height?: string }) => {
-    const container = useRef<HTMLDivElement>(null);
-
-    useEffect(() => {
-        if (!container.current) return;
-        container.current.innerHTML = '';
-        const script = document.createElement("script");
-        script.type = "text/javascript";
-        script.async = true;
-        Object.entries(scriptHTML).forEach(([key, value]) => {
-            // @ts-ignore
-            script[key] = value;
-        });
-        if (scriptHTML.src) script.src = scriptHTML.src;
-        if (scriptHTML.innerHTML) script.innerHTML = scriptHTML.innerHTML;
-
-        container.current.appendChild(script);
-        return () => {
-            if (container.current) container.current.innerHTML = '';
-        };
-    }, []);
-
-    return (
-        <div className="tradingview-widget-container" style={{ height }} ref={container}>
-            <div className="tradingview-widget-container__widget"></div>
-        </div>
-    );
-};
+import { TVWidget } from './TVWidget';
 
 // --- 1. Crypto Advanced Chart ---
 export const CryptoChartWidget = memo(() => {

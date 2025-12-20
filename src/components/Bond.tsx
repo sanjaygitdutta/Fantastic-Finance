@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { TrendingUp, TrendingDown, Search, BarChart3, Shield, DollarSign } from 'lucide-react';
-import { DisplayAd } from './AdSense';
+import { Landmark, Search, DollarSign } from 'lucide-react';
+import AdSlot from './AdSlot';
 
 interface BondData {
     name: string;
@@ -18,13 +18,16 @@ export default function Bond() {
     const [searchQuery, setSearchQuery] = useState('');
     const [filterType, setFilterType] = useState<string>('All');
 
+    // December 2025 Bond Data Backup
     const bonds: BondData[] = [
         { name: '7.17% GS 2028', issuer: 'Government of India', couponRate: 7.17, maturityDate: '08-Jan-2028', price: 102.45, yield: 6.85, rating: 'AAA', faceValue: 1000, type: 'Government' },
         { name: '6.79% GS 2034', issuer: 'Government of India', couponRate: 6.79, maturityDate: '15-May-2034', price: 98.20, yield: 7.02, rating: 'AAA', faceValue: 1000, type: 'Government' },
+        { name: '7.10% GS 2029', issuer: 'Government of India', couponRate: 7.10, maturityDate: '10-Jun-2029', price: 101.15, yield: 6.92, rating: 'AAA', faceValue: 1000, type: 'Government' },
         { name: 'HDFC Ltd Bond 2026', issuer: 'HDFC Bank', couponRate: 8.25, maturityDate: '20-Dec-2026', price: 103.80, yield: 7.45, rating: 'AAA', faceValue: 1000, type: 'Corporate' },
         { name: 'Reliance Industries 2029', issuer: 'Reliance Industries', couponRate: 7.95, maturityDate: '10-Mar-2029', price: 101.25, yield: 7.65, rating: 'AAA', faceValue: 1000, type: 'Corporate' },
         { name: 'SBI Bond 2027', issuer: 'State Bank of India', couponRate: 7.50, maturityDate: '25-Jun-2027', price: 100.50, yield: 7.38, rating: 'AAA', faceValue: 1000, type: 'Corporate' },
         { name: 'Tata Steel Bond 2026', issuer: 'Tata Steel', couponRate: 8.45, maturityDate: '15-Sep-2026', price: 99.85, yield: 8.50, rating: 'AA+', faceValue: 1000, type: 'Corporate' },
+        { name: 'ICICI Bank Bond 2028', issuer: 'ICICI Bank', couponRate: 7.75, maturityDate: '18-Mar-2028', price: 102.10, yield: 7.35, rating: 'AAA', faceValue: 1000, type: 'Corporate' },
     ];
 
     const types = ['All', 'Government', 'Corporate', 'Municipal'];
@@ -48,11 +51,11 @@ export default function Bond() {
             <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-200 dark:border-slate-700">
                 <div className="flex items-center gap-3 mb-4">
                     <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center">
-                        <Shield className="w-6 h-6 text-white" />
+                        <Landmark className="w-6 h-6 text-white" />
                     </div>
                     <div>
                         <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Bond Market</h1>
-                        <p className="text-slate-500 dark:text-slate-400">Fixed income securities & debt instruments</p>
+                        <p className="text-slate-500 dark:text-slate-400">Fixed income securities & debt instruments (December 2025)</p>
                     </div>
                 </div>
 
@@ -74,8 +77,8 @@ export default function Bond() {
                                 key={type}
                                 onClick={() => setFilterType(type)}
                                 className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition ${filterType === type
-                                        ? 'bg-green-600 text-white shadow-md'
-                                        : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
+                                    ? 'bg-green-600 text-white shadow-md'
+                                    : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
                                     }`}
                             >
                                 {type}
@@ -136,7 +139,7 @@ export default function Bond() {
             </div>
 
             {/* AdSense Display Ad */}
-            <DisplayAd adSlot="1234567911" className="mt-6" />
+            <AdSlot slot="bond-bottom" format="horizontal" className="mt-8 opacity-80" />
         </div>
     );
 }

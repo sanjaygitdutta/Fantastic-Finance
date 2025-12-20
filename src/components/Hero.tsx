@@ -1,4 +1,5 @@
 import { ArrowRight, Zap, BarChart3, TrendingUp, Shield, Target, Sparkles } from 'lucide-react';
+import AdSlot from './AdSlot';
 
 interface HeroProps {
   onSignUpClick: () => void;
@@ -36,9 +37,8 @@ export default function Hero({ onSignUpClick }: HeroProps) {
             </span>
           </h1>
 
-          {/* Subheadline */}
           <p className="text-xl md:text-2xl text-slate-600 mb-12 leading-relaxed max-w-3xl mx-auto">
-            Empower your trading with AI-driven signals, dynamic Greeks, and a risk-free environment to master complex strategies.
+            Master the markets with **Black-Scholes Analytics**, AI-driven signals, and institutional-grade Greeks—all within a risk-free environment.
           </p>
 
           {/* CTA Buttons */}
@@ -74,6 +74,11 @@ export default function Hero({ onSignUpClick }: HeroProps) {
               <span>Advanced Charting Tools</span>
             </div>
           </div>
+        </div>
+
+        {/* Hero Bottom Ad */}
+        <div className="max-w-4xl mx-auto mb-16">
+          <AdSlot slot="hero-bottom-banner" format="horizontal" />
         </div>
 
         {/* Feature Preview Cards */}

@@ -1,4 +1,5 @@
-import { DollarSign, Calculator, TrendingUp, AlertCircle, Info } from 'lucide-react';
+import { ShoppingCart, Shield, AlertTriangle, Info, Calculator, Activity, Trash2, Plus, Zap, DollarSign, AlertCircle } from 'lucide-react';
+import AdSlot from './AdSlot';
 import { useState } from 'react';
 
 interface MarginInputs {
@@ -450,6 +451,8 @@ export default function MarginCalculator() {
                     </div>
                 </div>
             </div>
+            {/* AdSense Display Ad */}
+            <AdSlot slot="margin-calc-bottom" format="horizontal" className="mt-8" />
         </div>
     );
 }

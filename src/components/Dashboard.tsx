@@ -2,7 +2,6 @@ import { TrendingUp, DollarSign, ArrowRight, Newspaper, TrendingDown } from 'luc
 import { Link } from 'react-router-dom';
 import PortfolioChart from './PortfolioChart';
 import { useLivePrices } from '../context/LivePriceContext';
-import { usePaperTrading } from '../context/PaperTradingContext';
 import { useState } from 'react';
 import FIIDIIDashboard from './FIIDIIDashboard';
 import IPOWatch from './IPOWatch';
@@ -15,21 +14,15 @@ import PortfolioInsights from './PortfolioInsights';
 import AchievementBadges from './AchievementBadges';
 import LearningCorner from './LearningCorner';
 import TradingCalendar from './TradingCalendar';
-import { DisplayAd } from './AdSense';
+import { TickerTapeWidget, TechnicalAnalysisWidget } from './TradingViewWidgets';
+import { usePaperTrading } from '../context/PaperTradingContext';
+import AdSlot from './AdSlot';
 
 export default function Dashboard() {
   const { prices } = useLivePrices();
   const { portfolio, getPerformanceMetrics } = usePaperTrading();
   const metrics = getPerformanceMetrics();
   const [showLosers, setShowLosers] = useState(false);
-
-  // Dynamic Market Indices
-  const marketIndices = [
-    { name: 'NIFTY 50', ...prices['NIFTY 50'] || { price: 19500, change: 0, changePercent: 0 } },
-    { name: 'BANKNIFTY', ...prices['BANKNIFTY'] || { price: 44500, change: 0, changePercent: 0 } },
-    { name: 'BTC', ...prices['BTC'] || { price: 35000, change: 0, changePercent: 0 } },
-    { name: 'ETH', ...prices['ETH'] || { price: 1800, change: 0, changePercent: 0 } },
-  ];
 
   // Dynamic Top Movers (using the same mock list but with live prices)
   const topMoversList = ['RELIANCE', 'TATASTEEL', 'INFY', 'HDFCBANK'];
@@ -71,36 +64,15 @@ export default function Dashboard() {
         <ActivePositions />
       </div>
 
-      {/* Market Ticker */}
-      <div className="bg-slate-900 text-white p-3 rounded-lg overflow-hidden flex items-center gap-6 shadow-md slide-up delay-300">
-        <div className="flex items-center gap-2 z-10 bg-slate-900 pr-4">
-          <span className="relative flex h-3 w-3">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
-          </span>
-          <span className="font-bold text-blue-400 text-sm whitespace-nowrap">MARKETS LIVE</span>
-        </div>
-        <div className="flex gap-8 animate-marquee whitespace-nowrap">
-          {marketIndices.map((idx) => (
-            <div key={idx.name} className="flex items-center gap-2 text-sm hover:bg-white/10 px-2 py-1 rounded transition">
-              <span className="font-medium text-slate-300">{idx.name}</span>
-              <span className="font-mono">{idx.price?.toLocaleString()}</span>
-              <span className={`font-mono ${idx.changePercent >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                {idx.changePercent > 0 ? '+' : ''}{idx.changePercent}%
-              </span>
-            </div>
-          ))}
-          {/* Duplicate for seamless marquee */}
-          {marketIndices.map((idx) => (
-            <div key={`${idx.name}-dup`} className="flex items-center gap-2 text-sm hover:bg-white/10 px-2 py-1 rounded transition">
-              <span className="font-medium text-slate-300">{idx.name}</span>
-              <span className="font-mono">{idx.price?.toLocaleString()}</span>
-              <span className={`font-mono ${idx.changePercent >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                {idx.changePercent > 0 ? '+' : ''}{idx.changePercent}%
-              </span>
-            </div>
-          ))}
-        </div>
+      {/* Real-time Ticker Tape */}
+      <div className="slide-up delay-300">
+        <TickerTapeWidget />
+      </div>
+
+      {/* Market Performance Overview */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 slide-up delay-300">
+        <TechnicalAnalysisWidget symbol="NSE:NIFTY" />
+        <TechnicalAnalysisWidget symbol="NSE:BANKNIFTY" />
       </div>
 
       {/* Portfolio Summary Section */}
@@ -257,7 +229,7 @@ export default function Dashboard() {
       </div>
 
       {/* AdSense Display Ad */}
-      <DisplayAd adSlot="1234567890" className="mt-8 opacity-80 hover:opacity-100 transition" />
+      <AdSlot slot="dashboard-bottom" format="horizontal" className="mt-8 opacity-80 hover:opacity-100 transition" />
     </div>
   );
 }

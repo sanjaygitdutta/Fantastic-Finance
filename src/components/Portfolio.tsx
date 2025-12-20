@@ -4,7 +4,7 @@ import { usePaperTrading } from '../context/PaperTradingContext';
 import { Link, useNavigate } from 'react-router-dom';
 import PortfolioInsights from './PortfolioInsights';
 import ActivePositions from './ActivePositions';
-import { DisplayAd } from './AdSense';
+import AdSlot from './AdSlot';
 
 export default function Portfolio() {
     const { portfolio } = usePaperTrading();
@@ -122,28 +122,16 @@ export default function Portfolio() {
 
                 {/* Main Content Grid */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    {/* Left Column - Active Positions & Portfolio Insights */}
+                    {/* Left Column - Active Positions & Portfolio Chart */}
                     <div className="lg:col-span-2 space-y-6">
                         {/* Active Positions */}
                         <ActivePositions />
 
-                        {/* Portfolio Performance Chart Placeholder */}
-                        <div className="bg-white dark:bg-slate-800 rounded-xl p-6 shadow-sm border border-slate-200 dark:border-slate-700">
-                            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
-                                <BarChart3 className="w-5 h-5 text-blue-600" />
-                                Portfolio Performance
-                            </h3>
-                            <div className="h-64 flex items-center justify-center text-slate-500 dark:text-slate-400 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg">
-                                <div className="text-center">
-                                    <BarChart3 className="w-12 h-12 mx-auto mb-2 text-slate-400" />
-                                    <p>Performance chart coming soon</p>
-                                    <p className="text-sm mt-1">Track your portfolio growth over time</p>
-                                </div>
-                            </div>
-                        </div>
+                        {/* Mid Content Ad */}
+                        <AdSlot slot="portfolio-mid-content" format="horizontal" />
                     </div>
 
-                    {/* Right Column - Portfolio Insights */}
+                    {/* Right Column - Portfolio Insights & Quick Stats */}
                     <div className="space-y-6">
                         <PortfolioInsights />
 
@@ -201,12 +189,15 @@ export default function Portfolio() {
                                 </Link>
                             </div>
                         </div>
+
+                        {/* Sidebar Ad */}
+                        <AdSlot slot="portfolio-sidebar" format="rectangle" />
                     </div>
                 </div>
-            </div>
 
-            {/* AdSense Display Ad */}
-            <DisplayAd adSlot="1234567902" className="mt-6" />
+                {/* Bottom Ad */}
+                <AdSlot slot="portfolio-bottom" format="horizontal" className="mt-8" />
+            </div>
         </div>
     );
 }
