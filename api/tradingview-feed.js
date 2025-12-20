@@ -19,11 +19,21 @@ export default async function handler(req, res) {
     try {
         console.log('📡 Fetching TradingView RSS feed...');
 
-        // Fetch directly from TradingView - no CORS on server-side!
+        // Fetch directly from TradingView with realistic browser headers
         const response = await fetch('https://in.tradingview.com/ideas/feed/', {
             headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-                'Accept': 'application/rss+xml, application/xml, text/xml, */*'
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Accept': 'application/rss+xml, application/xml, text/xml, application/atom+xml, */*',
+                'Accept-Language': 'en-US,en;q=0.9',
+                'Accept-Encoding': 'gzip, deflate, br',
+                'Referer': 'https://in.tradingview.com/ideas/',
+                'DNT': '1',
+                'Connection': 'keep-alive',
+                'Upgrade-Insecure-Requests': '1',
+                'Sec-Fetch-Dest': 'document',
+                'Sec-Fetch-Mode': 'navigate',
+                'Sec-Fetch-Site': 'same-origin',
+                'Cache-Control': 'max-age=0'
             }
         });
 
