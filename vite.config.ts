@@ -20,5 +20,17 @@ export default defineConfig({
 
   server: {
     port: 3000,
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+        configure: (proxy, options) => {
+          // Handle API routes by serving from api/ directory
+          proxy.on('proxyReq', (proxyReq, req, res) => {
+            // This will be handled by vercel dev or we'll add middleware
+          });
+        }
+      }
+    }
   },
 });

@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { PlusSquare, MinusSquare, Trash2, Play, RefreshCw, Save, Share2, TrendingUp, TrendingDown, Target, Zap, Activity, Info, ChevronRight, HelpCircle, BarChart3, AlertTriangle } from 'lucide-react';
+import { PlusSquare, MinusSquare, Trash2, Play, RefreshCw, Save, Share2, TrendingUp, TrendingDown, Target, Zap, Activity, Info, ChevronRight, HelpCircle, BarChart3, AlertTriangle, BookOpen, Plus } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 
 import { calculateMargin } from '../utils/marginCalculator';
