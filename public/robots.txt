@@ -35,4 +35,4 @@ User-agent: DotBot
 Disallow: /
 
 # Sitemap
-Sitemap: https://fantasticfinancialadvisory.com/sitemap.xml
+Sitemap: https://www.fantasticfinancialadvisory.com/sitemap.xml

@@ -1,4 +1,12 @@
 {
+    "redirects": [
+        {
+            "source": "/:path*",
+            "has": [{ "type": "host", "value": "fantasticfinancialadvisory.com" }],
+            "destination": "https://www.fantasticfinancialadvisory.com/:path*",
+            "permanent": true
+        }
+    ],
     "rewrites": [
         {
             "source": "/api/(.*)",
