@@ -15,13 +15,13 @@ export default function SEO({
     title = "Live Stock Market Dashboard & AI Analysis | Fantastic Finance",
     description = "Master the Indian stock market with real-time NIFTY/SENSEX data, AI-powered option chain analysis, and professional strategy builders. Get the edge you need for derivatives trading.",
     keywords = "stock market dashboard, NIFTY live analysis, options strategy builder, Indian stock market AI, option chain Greeks, financial news India, investing strategies, nse.com analysis, investing.com alternative, stock market academy, real-time market data",
-    image = "https://fantasticfinancialadvisory.com/og-image.jpg",
+    image = "https://www.fantasticfinancialadvisory.com/og-image.jpg",
     type = "website",
     canonicalUrl,
     schemaData
 }: SEOProps) {
     const location = useLocation();
-    const url = canonicalUrl || `https://fantasticfinancialadvisory.com${location.pathname}`;
+    const url = canonicalUrl || `https://www.fantasticfinancialadvisory.com${location.pathname}`;
     const siteTitle = "Fantastic Finance";
 
     // Ensure title has the site name if not already present
